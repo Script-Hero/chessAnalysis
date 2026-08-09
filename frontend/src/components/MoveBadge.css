@@ -1,0 +1,15 @@
+.move-badge {
+  display: inline-block;
+  margin-left: 4px;
+  font-weight: 700;
+  cursor: help;
+}
+.move-badge--warning {
+  color: var(--status-warning);
+}
+.move-badge--serious {
+  color: var(--status-serious);
+}
+.move-badge--critical {
+  color: var(--status-critical);
+}

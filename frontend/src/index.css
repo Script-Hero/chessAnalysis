@@ -1,0 +1,63 @@
+:root {
+  --ink: #0f0d0a;
+  --ink-2: #17130f;
+  --parchment: #ece2ce;
+  --parchment-dim: #b8ac93;
+  --brass: #c9a24b;
+  --brass-bright: #e8c375;
+  --board-line: rgba(236, 226, 206, 0.05);
+
+  /* Established White/Black identity colors, reused across every chart in the app. */
+  --white-accent: #e8c375;
+  --black-accent: #7fa8e8;
+
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  --display: 'Fraunces', 'Iowan Old Style', serif;
+  --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  color-scheme: dark;
+  color: var(--parchment);
+  background: var(--ink);
+  font: 16px/1.5 var(--mono);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ink);
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(232, 195, 117, 0.35);
+  border-top-color: var(--brass-bright);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+  vertical-align: -1px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,102 @@
+.time-chart {
+  border: 1px solid rgba(201, 162, 75, 0.28);
+  background: rgba(23, 19, 15, 0.55);
+  backdrop-filter: blur(6px);
+  padding: 16px 18px 14px;
+}
+
+.time-chart__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.time-chart__title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  opacity: 0.75;
+}
+
+.time-chart__readout {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--parchment);
+}
+
+.time-chart__control {
+  color: var(--parchment-dim);
+}
+
+.time-chart__svg {
+  display: block;
+  width: 100%;
+  height: 120px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.time-chart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.time-chart__line--white {
+  stroke: var(--white-accent);
+}
+.time-chart__line--black {
+  stroke: var(--black-accent);
+}
+
+.time-chart__cursor {
+  stroke: var(--brass-bright);
+  stroke-width: 1;
+  opacity: 0.7;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.time-chart__marker {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+.time-chart__marker--mistake {
+  fill: var(--status-serious);
+}
+.time-chart__marker--blunder {
+  fill: var(--status-critical);
+}
+
+.time-chart__legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 8px;
+}
+
+.time-chart__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--parchment-dim);
+}
+
+.time-chart__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.time-chart__swatch--white {
+  background: var(--white-accent);
+}
+.time-chart__swatch--black {
+  background: var(--black-accent);
+}
