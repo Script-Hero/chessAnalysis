@@ -14,6 +14,8 @@
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
+  --status-good: #4caf7d;
+  --tree-alt: #8b6fe0;
 
   --display: 'Fraunces', 'Iowan Old Style', serif;
   --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
