@@ -1,0 +1,22 @@
+.tree-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tree-tab__heading {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  opacity: 0.75;
+  margin: 0 0 8px;
+}
+
+.tree-tab__pending {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--parchment-dim);
+  padding: 20px;
+}
