@@ -4,7 +4,7 @@ import { useAnalysis } from '../context/AnalysisContext'
 import './AnalysisTab.css'
 
 function AnalysisTab() {
-  const { game, ply, goTo, evals, judgments, liveEngineEnabled, setLiveEngineEnabled, liveLines, liveDepth } =
+  const { game, ply, goTo, evals, judgments, lines, liveEngineEnabled, setLiveEngineEnabled, liveLines, liveDepth } =
     useAnalysis()
 
   const position = game.positions[ply]
@@ -14,8 +14,9 @@ function AnalysisTab() {
       <LiveEnginePanel
         enabled={liveEngineEnabled}
         onToggle={setLiveEngineEnabled}
-        lines={liveLines}
-        depth={liveDepth}
+        storedLines={lines?.[ply] ?? null}
+        liveLines={liveLines}
+        liveDepth={liveDepth}
         fen={position}
       />
 

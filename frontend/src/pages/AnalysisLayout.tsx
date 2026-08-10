@@ -7,6 +7,7 @@ import { parsePgn } from '../lib/pgn'
 import type { ParsedGame } from '../lib/pgn'
 import { analyzeGame, LiveEngine } from '../lib/stockfish'
 import type { EngineLine, MoveJudgment, PositionEval } from '../lib/stockfish'
+import { clearAnalysisCache, loadAnalysisCache, saveAnalysisCache } from '../lib/cache'
 import { AnalysisContext } from '../context/AnalysisContext'
 import type { AnalysisContextValue, DashboardTab } from '../context/AnalysisContext'
 import './AnalysisLayout.css'
@@ -17,14 +18,17 @@ function AnalysisLayout() {
   const [isDragging, setIsDragging] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
   const [game, setGame] = useState<ParsedGame | null>(null)
+  const [pgnText, setPgnText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const dragDepth = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const skipNextAnalysisRef = useRef(false)
 
   const [ply, setPly] = useState(0)
   const [orientation, setOrientation] = useState<'white' | 'black'>('white')
   const [evals, setEvals] = useState<PositionEval[] | null>(null)
   const [judgments, setJudgments] = useState<(MoveJudgment | null)[] | null>(null)
+  const [lines, setLines] = useState<EngineLine[][] | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [analysisError, setAnalysisError] = useState<string | null>(null)
@@ -42,6 +46,7 @@ function AnalysisLayout() {
       const text = await file.text()
       const parsed = parsePgn(text)
       setGame(parsed)
+      setPgnText(text)
       setPly(parsed.moves.length)
     } catch {
       setGame(null)
@@ -49,15 +54,40 @@ function AnalysisLayout() {
     }
   }, [])
 
+  // On first mount, restore the most recently completed analysis (if any) so a
+  // page reload doesn't force re-dropping the file and re-running the engine.
+  useEffect(() => {
+    const cached = loadAnalysisCache()
+    if (!cached) return
+    try {
+      const parsed = parsePgn(cached.pgn)
+      skipNextAnalysisRef.current = true
+      setPgnText(cached.pgn)
+      setFileName(cached.fileName)
+      setGame(parsed)
+      setPly(parsed.moves.length)
+      setEvals(cached.evals)
+      setJudgments(cached.judgments)
+      setLines(cached.lines)
+    } catch {
+      clearAnalysisCache()
+    }
+  }, [])
+
   // Analysis runs automatically as soon as a game loads — no button to click.
   useEffect(() => {
     if (!game) return
+    if (skipNextAnalysisRef.current) {
+      skipNextAnalysisRef.current = false
+      return
+    }
     let cancelled = false
 
     setAnalyzing(true)
     setAnalysisError(null)
     setEvals(null)
     setJudgments(null)
+    setLines(null)
     setProgress({ done: 0, total: game.positions.length })
 
     analyzeGame(game.positions, (done, total) => {
@@ -67,6 +97,7 @@ function AnalysisLayout() {
         if (cancelled) return
         setEvals(result.evals)
         setJudgments(result.judgments)
+        setLines(result.lines)
       })
       .catch(() => {
         if (!cancelled) setAnalysisError("Couldn't run the engine analysis.")
@@ -79,6 +110,12 @@ function AnalysisLayout() {
       cancelled = true
     }
   }, [game])
+
+  // Persist the finished analysis so it survives a page reload.
+  useEffect(() => {
+    if (!game || !pgnText || !fileName || !evals || !judgments || !lines) return
+    saveAnalysisCache({ fileName, pgn: pgnText, evals, judgments, lines })
+  }, [game, pgnText, fileName, evals, judgments, lines])
 
   const position = game?.positions[ply]
 
@@ -108,11 +145,14 @@ function AnalysisLayout() {
   }, [])
 
   const reset = () => {
+    clearAnalysisCache()
     setGame(null)
     setFileName(null)
+    setPgnText(null)
     setError(null)
     setEvals(null)
     setJudgments(null)
+    setLines(null)
     setAnalysisError(null)
     setLiveEngineEnabled(false)
     setPly(0)
@@ -215,6 +255,7 @@ function AnalysisLayout() {
     setOrientation,
     evals,
     judgments,
+    lines,
     analyzing,
     progress,
     analysisError,

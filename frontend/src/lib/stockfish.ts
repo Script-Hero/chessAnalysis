@@ -130,6 +130,22 @@ function sanFromUci(fen: string, uci: string | null): string | null {
   }
 }
 
+/** Applies one UCI move to `fen`, returning the resulting SAN and FEN, or null if illegal. */
+export function stepUci(fen: string, uci: string): { san: string; fen: string } | null {
+  try {
+    const chess = new Chess(fen)
+    const move = chess.move({
+      from: uci.slice(0, 2),
+      to: uci.slice(2, 4),
+      promotion: uci.slice(4, 5) || undefined,
+    })
+    if (!move) return null
+    return { san: move.san, fen: chess.fen() }
+  } catch {
+    return null
+  }
+}
+
 function classify(adjustedLossPct: number, rawLossPct: number): MoveClassification {
   if (rawLossPct <= 1) return 'best'
   if (adjustedLossPct <= 2) return 'excellent'
