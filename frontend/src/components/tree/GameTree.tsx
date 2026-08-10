@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
-import { DEFAULT_BRANCH_PLIES } from '../../lib/tree'
-import type { GameTreeRow, LineTreeNode } from '../../lib/tree'
+import { DEFAULT_BRANCH_PLIES, groupGameTreeRows } from '../../lib/tree'
+import type { CollapseThreshold, GameTreeRow, LineTreeNode } from '../../lib/tree'
 import TreeNodePreview from './TreeNodePreview'
 import type { HoverTarget } from './TreeNodePreview'
 import './GameTree.css'
@@ -10,6 +10,7 @@ type GameTreeProps = {
   rows: GameTreeRow[]
   currentPly: number
   onSelectPly: (ply: number) => void
+  collapseThreshold: CollapseThreshold
 }
 
 const ROW_PITCH = 30
@@ -42,14 +43,35 @@ function moveLabel(row: GameTreeRow): string {
   return row.mover === 'white' ? `${moveNumber}. ${row.san}` : `${moveNumber}... ${row.san}`
 }
 
-function GameTree({ rows, currentPly, onSelectPly }: GameTreeProps) {
-  const [hover, setHover] = useState<HoverTarget | null>(null)
+type RenderItem =
+  | { type: 'row'; row: GameTreeRow }
+  | { type: 'collapsed'; startPly: number; endPly: number; rows: GameTreeRow[] }
 
-  const height = PAD_TOP * 2 + rows.length * ROW_PITCH
+function GameTree({ rows, currentPly, onSelectPly, collapseThreshold }: GameTreeProps) {
+  const [hover, setHover] = useState<HoverTarget | null>(null)
+  const [expandedRuns, setExpandedRuns] = useState<Set<number>>(new Set())
+
+  // A threshold change invalidates the previous grouping — there's no
+  // meaningful way to carry "this run is expanded" forward across a regroup.
+  useEffect(() => {
+    setExpandedRuns(new Set())
+  }, [collapseThreshold])
+
+  const items = useMemo(() => groupGameTreeRows(rows, collapseThreshold), [rows, collapseThreshold])
+
+  const renderItems: RenderItem[] = items.flatMap((item): RenderItem[] => {
+    if (item.kind === 'row') return [{ type: 'row', row: item.row }]
+    if (expandedRuns.has(item.startPly)) return item.rows.map((row) => ({ type: 'row', row }))
+    return [{ type: 'collapsed', startPly: item.startPly, endPly: item.endPly, rows: item.rows }]
+  })
+
+  const height = PAD_TOP * 2 + renderItems.length * ROW_PITCH
   const width = RAIL_X + BRANCH_DX * (DEFAULT_BRANCH_PLIES + 1) + 160
 
   const showHover = (e: ReactMouseEvent, node: { fen: string; san: string }) =>
     setHover({ fen: node.fen, san: node.san, x: e.clientX, y: e.clientY })
+
+  const expandRun = (startPly: number) => setExpandedRuns((prev) => new Set(prev).add(startPly))
 
   let branchIndex = 0
 
@@ -58,8 +80,27 @@ function GameTree({ rows, currentPly, onSelectPly }: GameTreeProps) {
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} className="game-tree__svg">
         <line x1={RAIL_X} y1={PAD_TOP} x2={RAIL_X} y2={height - PAD_TOP} className="game-tree__rail" />
 
-        {rows.map((row, i) => {
+        {renderItems.map((item, i) => {
           const rowY = PAD_TOP + i * ROW_PITCH
+
+          if (item.type === 'collapsed') {
+            const isCurrent = currentPly >= item.startPly && currentPly <= item.endPly
+            return (
+              <g key={`collapsed-${item.startPly}`} onClick={() => expandRun(item.startPly)}>
+                <circle
+                  cx={RAIL_X}
+                  cy={rowY}
+                  r={4.5}
+                  className={`game-tree__collapsed-dot${isCurrent ? ' is-current' : ''}`}
+                />
+                <text x={RAIL_X + 12} y={rowY + 4} className="game-tree__collapsed-label">
+                  {item.rows.length} solid moves
+                </text>
+              </g>
+            )
+          }
+
+          const row = item.row
           const isCurrent = row.ply === currentPly
           const tone = row.classification ? CLASS_TONE[row.classification] : 'top'
           const side = row.branch ? (branchIndex++ % 2 === 0 ? 1 : -1) : 0

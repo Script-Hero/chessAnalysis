@@ -59,3 +59,20 @@
   fill: var(--status-good);
   font-size: 10px;
 }
+
+.game-tree__collapsed-dot {
+  fill: var(--parchment-dim);
+  opacity: 0.5;
+  cursor: pointer;
+}
+.game-tree__collapsed-dot.is-current {
+  stroke: var(--parchment);
+  stroke-width: 2;
+  opacity: 0.8;
+}
+
+.game-tree__collapsed-label {
+  fill: var(--parchment-dim);
+  font-style: italic;
+  cursor: pointer;
+}
