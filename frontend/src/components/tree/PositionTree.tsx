@@ -10,8 +10,6 @@ import './PositionTree.css'
 type PositionTreeProps = {
   fen: string
   lines: EngineLine[] | null
-  currentPly: number
-  onJumpToPly: (ply: number) => void
 }
 
 type LayoutNode = LineTreeNode & { x: number; y: number; layoutChildren: LayoutNode[] }
@@ -52,7 +50,7 @@ function collectNodes(node: LayoutNode, out: LayoutNode[]) {
   node.layoutChildren.forEach((child) => collectNodes(child, out))
 }
 
-function PositionTree({ fen, lines, currentPly: _currentPly, onJumpToPly: _onJumpToPly }: PositionTreeProps) {
+function PositionTree({ fen, lines }: PositionTreeProps) {
   const [hover, setHover] = useState<HoverTarget | null>(null)
 
   const layoutResult = useMemo(() => {

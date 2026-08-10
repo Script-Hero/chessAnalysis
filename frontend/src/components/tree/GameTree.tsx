@@ -103,7 +103,12 @@ function GameTree({ rows, currentPly, onSelectPly }: GameTreeProps) {
                       className="game-tree__branch-dot"
                       onMouseEnter={(e) => showHover(e, node)}
                       onMouseLeave={() => setHover(null)}
-                      onClick={() => onSelectPly(row.ply)}
+                      // row.branch is built from positions[row.ply - 1] (the position BEFORE the
+                      // flagged move was played) — it's the engine's suggested alternative from
+                      // that earlier position. Jump to row.ply - 1, not row.ply: the position
+                      // after the actual move was already played, where this alternative may no
+                      // longer even be legal.
+                      onClick={() => onSelectPly(row.ply - 1)}
                     />
                     <text
                       x={x + side * 6}

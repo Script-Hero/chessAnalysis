@@ -29,7 +29,7 @@ function TreeTab() {
 
       <section className="tree-tab__section">
         <h3 className="tree-tab__heading">This position's lines</h3>
-        <PositionTree fen={position} lines={currentLines} currentPly={ply} onJumpToPly={goTo} />
+        <PositionTree fen={position} lines={currentLines} />
       </section>
     </div>
   )
