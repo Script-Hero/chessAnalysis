@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { DEFAULT_BRANCH_PLIES, groupGameTreeRows } from '../../lib/tree'
 import type { CollapseThreshold, GameTreeRow, LineTreeNode } from '../../lib/tree'
@@ -53,9 +53,13 @@ function GameTree({ rows, currentPly, onSelectPly, collapseThreshold }: GameTree
 
   // A threshold change invalidates the previous grouping — there's no
   // meaningful way to carry "this run is expanded" forward across a regroup.
-  useEffect(() => {
+  // Adjusted during render (React's recommended pattern for this), not in an
+  // effect, to avoid an extra cascading render.
+  const [prevCollapseThreshold, setPrevCollapseThreshold] = useState(collapseThreshold)
+  if (prevCollapseThreshold !== collapseThreshold) {
+    setPrevCollapseThreshold(collapseThreshold)
     setExpandedRuns(new Set())
-  }, [collapseThreshold])
+  }
 
   const items = useMemo(() => groupGameTreeRows(rows, collapseThreshold), [rows, collapseThreshold])
 
