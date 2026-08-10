@@ -52,7 +52,7 @@ function collectNodes(node: LayoutNode, out: LayoutNode[]) {
   node.layoutChildren.forEach((child) => collectNodes(child, out))
 }
 
-function PositionTree({ fen, lines, currentPly, onJumpToPly }: PositionTreeProps) {
+function PositionTree({ fen, lines, currentPly: _currentPly, onJumpToPly: _onJumpToPly }: PositionTreeProps) {
   const [hover, setHover] = useState<HoverTarget | null>(null)
 
   const layoutResult = useMemo(() => {
@@ -60,8 +60,9 @@ function PositionTree({ fen, lines, currentPly, onJumpToPly }: PositionTreeProps
     const tree = buildPositionTree(fen, lines, DEFAULT_POSITION_PLIES)
     const cursor = { next: PAD }
     const top = layout(tree, 1, cursor)
+    if (top.length === 0) return null
     const height = Math.max(cursor.next, PAD * 2)
-    const rootY = top.length ? top.reduce((s, n) => s + n.y, 0) / top.length : PAD
+    const rootY = top.reduce((s, n) => s + n.y, 0) / top.length
     const width = (DEFAULT_POSITION_PLIES + 1) * COL_WIDTH + 80
     return { top, height, width, rootY }
   }, [fen, lines])
@@ -101,7 +102,6 @@ function PositionTree({ fen, lines, currentPly, onJumpToPly }: PositionTreeProps
               className={`position-tree__node position-tree__node--${node.minRank === 0 ? 'top' : 'alt'}`}
               onMouseEnter={(e) => showHover(e, node)}
               onMouseLeave={() => setHover(null)}
-              onClick={() => onJumpToPly(currentPly)}
             />
             <text x={node.x + 8} y={node.y + 4} className="position-tree__label">
               {node.san}
