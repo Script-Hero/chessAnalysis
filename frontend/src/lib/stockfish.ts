@@ -31,6 +31,8 @@ export type GameAnalysis = {
   evals: PositionEval[]
   /** One entry per position; null for the final position (no move follows it). */
   judgments: (MoveJudgment | null)[]
+  /** Up to `multiPv` candidate lines per position, one entry per position. */
+  lines: EngineLine[][]
 }
 
 const ENGINE_URL = '/stockfish/stockfish-18-lite-single.js'
@@ -256,7 +258,7 @@ export async function analyzeGame(
       }
     })
 
-    return { evals, judgments }
+    return { evals, judgments, lines: perPosition }
   } finally {
     engine.terminate()
   }

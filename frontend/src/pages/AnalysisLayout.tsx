@@ -25,6 +25,7 @@ function AnalysisLayout() {
   const [orientation, setOrientation] = useState<'white' | 'black'>('white')
   const [evals, setEvals] = useState<PositionEval[] | null>(null)
   const [judgments, setJudgments] = useState<(MoveJudgment | null)[] | null>(null)
+  const [lines, setLines] = useState<EngineLine[][] | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [analysisError, setAnalysisError] = useState<string | null>(null)
@@ -58,6 +59,7 @@ function AnalysisLayout() {
     setAnalysisError(null)
     setEvals(null)
     setJudgments(null)
+    setLines(null)
     setProgress({ done: 0, total: game.positions.length })
 
     analyzeGame(game.positions, (done, total) => {
@@ -67,6 +69,7 @@ function AnalysisLayout() {
         if (cancelled) return
         setEvals(result.evals)
         setJudgments(result.judgments)
+        setLines(result.lines)
       })
       .catch(() => {
         if (!cancelled) setAnalysisError("Couldn't run the engine analysis.")
@@ -113,6 +116,7 @@ function AnalysisLayout() {
     setError(null)
     setEvals(null)
     setJudgments(null)
+    setLines(null)
     setAnalysisError(null)
     setLiveEngineEnabled(false)
     setPly(0)
@@ -215,6 +219,7 @@ function AnalysisLayout() {
     setOrientation,
     evals,
     judgments,
+    lines,
     analyzing,
     progress,
     analysisError,

@@ -13,6 +13,7 @@ export type AnalysisContextValue = {
   setOrientation: (orientation: 'white' | 'black') => void
   evals: PositionEval[] | null
   judgments: (MoveJudgment | null)[] | null
+  lines: EngineLine[][] | null
   analyzing: boolean
   progress: { done: number; total: number }
   analysisError: string | null
