@@ -3,6 +3,7 @@ import type { DragEvent } from 'react'
 import BoardPane from './BoardPane'
 import AnalysisTab from './AnalysisTab'
 import ReportView from './ReportView'
+import TreeTab from './TreeTab'
 import { parsePgn } from '../lib/pgn'
 import type { ParsedGame } from '../lib/pgn'
 import { analyzeGame, LiveEngine } from '../lib/stockfish'
@@ -270,9 +271,18 @@ function AnalysisLayout() {
               >
                 Report
               </button>
+              <button
+                type="button"
+                className={`dashboard-tabs__tab${activeTab === 'tree' ? ' is-active' : ''}`}
+                onClick={() => setActiveTab('tree')}
+              >
+                Tree
+              </button>
             </div>
 
-            <div className="dashboard-tabs__content">{activeTab === 'analysis' ? <AnalysisTab /> : <ReportView />}</div>
+            <div className="dashboard-tabs__content">
+              {activeTab === 'analysis' ? <AnalysisTab /> : activeTab === 'report' ? <ReportView /> : <TreeTab />}
+            </div>
           </div>
         </div>
       </AnalysisContext.Provider>
