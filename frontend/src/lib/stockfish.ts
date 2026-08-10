@@ -211,10 +211,12 @@ class StockfishEngine {
   }
 }
 
+export const ANALYSIS_DEPTH = 12
+
 export async function analyzeGame(
   positions: string[],
   onProgress: (done: number, total: number) => void,
-  depth = 12,
+  depth = ANALYSIS_DEPTH,
   multiPv = 3,
 ): Promise<GameAnalysis> {
   const engine = new StockfishEngine(multiPv)
