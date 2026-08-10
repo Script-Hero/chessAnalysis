@@ -1,0 +1,22 @@
+.tree-node-preview {
+  position: fixed;
+  z-index: 50;
+  width: 176px;
+  pointer-events: none;
+  background: rgba(15, 13, 10, 0.92);
+  border: 1px solid rgba(201, 162, 75, 0.4);
+  padding: 8px;
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.7);
+}
+
+.tree-node-preview__board {
+  width: 160px;
+}
+
+.tree-node-preview__san {
+  margin: 6px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--parchment);
+  text-align: center;
+}
