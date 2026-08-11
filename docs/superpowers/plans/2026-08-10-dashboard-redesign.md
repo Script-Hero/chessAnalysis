@@ -128,13 +128,12 @@ git commit -m "feat: add sideToMove and moverAtDepth helpers for mover color cod
 **Files:**
 - Create: `frontend/src/components/explore/GameTree.tsx` (moved + modified from `frontend/src/components/tree/GameTree.tsx`)
 - Create: `frontend/src/components/explore/GameTree.css` (moved + modified from `frontend/src/components/tree/GameTree.css`)
-- Modify: `frontend/src/components/tree/TreeNodePreview.tsx` import path stays `./TreeNodePreview` for now (moved together in this same task, since `GameTree` imports it directly)
 - Create: `frontend/src/components/explore/TreeNodePreview.tsx` (moved, unchanged, from `frontend/src/components/tree/TreeNodePreview.tsx`)
 - Create: `frontend/src/components/explore/TreeNodePreview.css` (moved, unchanged, from `frontend/src/components/tree/TreeNodePreview.css`)
 
 **Interfaces:**
 - Consumes: `moverAtDepth`, `sideToMove` from `../../lib/analysis` (Task 2); `GameTreeRow`, `LineTreeNode`, `groupGameTreeRows` from `../../lib/tree` (unchanged); `HoverTarget` from `./TreeNodePreview`.
-- Produces: `GameTree` component with the same props as today (`rows`, `currentPly`, `onSelectPly`, `collapseThreshold`) — consumed by `ExploreTab` in Task 9.
+- Produces: `GameTree` component with the same props as today (`rows`, `currentPly`, `onSelectPly`, `collapseThreshold`) — consumed by `ExploreTab` in Task 11.
 
 The trunk node's mover is already available directly as `row.mover` (`GameTreeRow.mover: Side`) — no new lookup needed. The branch chain's mover needs `moverAtDepth`: the first branch node (depth 1) represents an alternative for the same move as the trunk row, so its mover is `row.mover`; deeper nodes alternate from there.
 
@@ -393,11 +392,11 @@ git commit -m "feat: add PositionTree to components/explore with mover stroke co
 
 **Interfaces:**
 - Consumes: `PositionTree` (Task 4); `BUCKET_INFO`, `PlyMetric` from `../../lib/graphMetrics` (unchanged); `EngineLine` from `../../lib/stockfish` (unchanged).
-- Produces: `CandidateLines` component — `{ metric: PlyMetric | null; fen: string | null; lines: EngineLine[] | null }` props, same shape as the old `GraphMoveDetail` — consumed by `ExploreTab` in Task 9.
+- Produces: `CandidateLines` component — `{ metric: PlyMetric | null; fen: string | null; lines: EngineLine[] | null }` props, same shape as the old `GraphMoveDetail` — consumed by `ExploreTab` in Task 11.
 
 **Indexing note (read before writing code):** the old `TreeTab`'s "This position's lines" was forward-looking — for the currently-viewed position (`ply`), it showed `lines[ply]` (candidates for the *next* move to be played from here) and `fen = positions[ply]`. The old `GraphTab`'s "Move detail" was backward-looking — for the move *just played* to reach `ply`, it used `metric = metrics[ply - 1]`, `fen = positions[ply - 1]`, `lines = lines[ply - 1]`. These two are inconsistent when merged into one widget for the same `ply`.
 
-This task keeps the **forward-looking** convention (matching the original Tree tab and matching `GameTree`'s existing branch-click behavior, which already jumps to `row.ply - 1` specifically so a forward-looking "position's lines" widget shows that fork's alternatives). `ExploreTab` (Task 9) will therefore pass `metric = metrics[ply]` (not `metrics[ply - 1]`) alongside `fen = positions[ply]` and `lines = lines[ply]` — all three share the same index. `metrics[ply]` describes the move that was actually played next in the game from this position (SAN, classification, entropy, etc.), which existed already as `PlyMetric` but was previously read one index earlier. At the last ply (`ply === game.moves.length`), `metrics[ply]` is `undefined` — treat that exactly like `metric === null`.
+This task keeps the **forward-looking** convention (matching the original Tree tab and matching `GameTree`'s existing branch-click behavior, which already jumps to `row.ply - 1` specifically so a forward-looking "position's lines" widget shows that fork's alternatives). `ExploreTab` (Task 11) will therefore pass `metric = metrics[ply]` (not `metrics[ply - 1]`) alongside `fen = positions[ply]` and `lines = lines[ply]` — all three share the same index. `metrics[ply]` describes the move that was actually played next in the game from this position (SAN, classification, entropy, etc.), which existed already as `PlyMetric` but was previously read one index earlier. At the last ply (`ply === game.moves.length`), `metrics[ply]` is `undefined` — treat that exactly like `metric === null`.
 
 - [ ] **Step 1: Write `CandidateLines.tsx`**
 
@@ -529,7 +528,7 @@ git commit -m "feat: add CandidateLines, merging PositionTree and the old move-d
 - Create: `frontend/src/components/explore/EvalChart.css` (moved, unchanged)
 
 **Interfaces:**
-- Both keep their exact current props (`LiveEnginePanelProps`, `EvalChartProps`) — consumed by `ExploreTab` in Task 9.
+- Both keep their exact current props (`LiveEnginePanelProps`, `EvalChartProps`) — consumed by `ExploreTab` in Task 11.
 - `LiveEnginePanel` imports `ANALYSIS_DEPTH`, `sanLineFromUci`, `EngineLine` from `'../lib/stockfish'` today (one level up from `components/`); from `components/explore/`, this becomes `'../../lib/stockfish'`.
 
 - [ ] **Step 1: Copy and fix the import path**
