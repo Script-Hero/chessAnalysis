@@ -1,0 +1,119 @@
+.explore-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.explore-tab__pending {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--parchment-dim);
+  border: 1px solid rgba(201, 162, 75, 0.28);
+  background: rgba(23, 19, 15, 0.55);
+  padding: 28px 18px;
+}
+
+.explore-tab__pending-text {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--parchment-dim);
+  padding: 20px;
+}
+
+.explore-tab__subtabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid rgba(201, 162, 75, 0.2);
+}
+
+.explore-tab__subtab-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 18px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.explore-tab__subtab-btn:hover {
+  color: var(--parchment);
+}
+
+.explore-tab__subtab-btn.is-active {
+  color: var(--brass-bright);
+  border-color: rgba(201, 162, 75, 0.4);
+  background: rgba(201, 162, 75, 0.08);
+}
+
+.explore-tab__subtab-content {
+  min-width: 0;
+}
+
+.explore-tab__section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.explore-tab__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.explore-tab__filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.explore-tab__filter-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  opacity: 0.75;
+}
+
+.explore-tab__filter-options {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.explore-tab__filter-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  background: transparent;
+  border: 1px solid rgba(201, 162, 75, 0.18);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.explore-tab__filter-btn:hover {
+  color: var(--parchment);
+  border-color: rgba(201, 162, 75, 0.4);
+}
+
+.explore-tab__filter-btn.is-active {
+  color: var(--brass-bright);
+  border-color: rgba(201, 162, 75, 0.5);
+  background: rgba(201, 162, 75, 0.08);
+}
