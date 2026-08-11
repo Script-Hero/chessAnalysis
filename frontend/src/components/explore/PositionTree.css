@@ -1,0 +1,57 @@
+.position-tree {
+  position: relative;
+  border: 1px solid rgba(201, 162, 75, 0.28);
+  background: rgba(23, 19, 15, 0.55);
+  padding: 12px;
+}
+
+.position-tree--empty {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--parchment-dim);
+  padding: 20px;
+}
+
+.position-tree__svg {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow: visible;
+}
+
+.position-tree__root {
+  fill: var(--parchment);
+}
+
+.position-tree__branch {
+  fill: none;
+  stroke-width: 1.5;
+}
+.position-tree__branch--top {
+  stroke: var(--brass-bright);
+  opacity: 0.85;
+}
+.position-tree__branch--alt {
+  stroke: var(--tree-alt);
+  opacity: 0.7;
+}
+
+.position-tree__node--top {
+  fill: var(--brass-bright);
+}
+.position-tree__node--alt {
+  fill: var(--tree-alt);
+}
+
+.position-tree__label {
+  fill: var(--parchment-dim);
+}
+
+.position-tree__node--mover-white {
+  stroke: var(--white-accent);
+  stroke-width: 1.5;
+}
+.position-tree__node--mover-black {
+  stroke: var(--black-accent);
+  stroke-width: 1.5;
+}
