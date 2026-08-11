@@ -4,6 +4,7 @@ import BoardPane from './BoardPane'
 import AnalysisTab from './AnalysisTab'
 import ReportView from './ReportView'
 import TreeTab from './TreeTab'
+import GraphTab from './GraphTab'
 import { parsePgn } from '../lib/pgn'
 import type { ParsedGame } from '../lib/pgn'
 import { analyzeGame, LiveEngine } from '../lib/stockfish'
@@ -314,10 +315,25 @@ function AnalysisLayout() {
               >
                 Tree
               </button>
+              <button
+                type="button"
+                className={`dashboard-tabs__tab${activeTab === 'graph' ? ' is-active' : ''}`}
+                onClick={() => setActiveTab('graph')}
+              >
+                Graph
+              </button>
             </div>
 
             <div className="dashboard-tabs__content">
-              {activeTab === 'analysis' ? <AnalysisTab /> : activeTab === 'report' ? <ReportView /> : <TreeTab />}
+              {activeTab === 'analysis' ? (
+                <AnalysisTab />
+              ) : activeTab === 'report' ? (
+                <ReportView />
+              ) : activeTab === 'tree' ? (
+                <TreeTab />
+              ) : (
+                <GraphTab />
+              )}
             </div>
           </div>
         </div>
