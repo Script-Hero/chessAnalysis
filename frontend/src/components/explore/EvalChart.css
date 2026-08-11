@@ -1,0 +1,153 @@
+.eval-chart {
+  border: 1px solid rgba(201, 162, 75, 0.28);
+  background: rgba(23, 19, 15, 0.55);
+  backdrop-filter: blur(6px);
+  padding: 16px 18px 14px;
+}
+
+.eval-chart__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.eval-chart__title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  opacity: 0.75;
+}
+
+.eval-chart__readout {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--parchment);
+  white-space: nowrap;
+}
+
+.eval-chart__readout-move {
+  color: var(--parchment-dim);
+}
+
+.eval-chart__readout-tag {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 2px;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+.eval-chart__readout-tag--mistake {
+  color: var(--status-serious);
+  background: rgba(236, 131, 90, 0.14);
+}
+.eval-chart__readout-tag--blunder {
+  color: var(--status-critical);
+  background: rgba(208, 59, 59, 0.16);
+}
+
+.eval-chart__svg {
+  display: block;
+  width: 100%;
+  height: 140px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.eval-chart__baseline {
+  stroke: rgba(236, 226, 206, 0.18);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.eval-chart__area {
+  stroke: none;
+  opacity: 0.12;
+}
+.eval-chart__area--white {
+  fill: var(--white-accent);
+}
+.eval-chart__area--black {
+  fill: var(--black-accent);
+}
+
+.eval-chart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.eval-chart__line--white {
+  stroke: var(--white-accent);
+}
+.eval-chart__line--black {
+  stroke: var(--black-accent);
+}
+
+.eval-chart__cursor {
+  stroke: var(--brass-bright);
+  stroke-width: 1;
+  opacity: 0.7;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.eval-chart__hover-line {
+  stroke: var(--parchment-dim);
+  stroke-width: 1;
+  opacity: 0.4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.eval-chart__dot {
+  fill: var(--brass-bright);
+  stroke: var(--ink-2);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.eval-chart__marker {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+.eval-chart__marker--mistake {
+  fill: var(--status-serious);
+}
+.eval-chart__marker--blunder {
+  fill: var(--status-critical);
+}
+
+.eval-chart__legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 10px;
+}
+
+.eval-chart__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--parchment-dim);
+}
+
+.eval-chart__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.eval-chart__swatch--white {
+  background: var(--white-accent);
+}
+.eval-chart__swatch--black {
+  background: var(--black-accent);
+}
