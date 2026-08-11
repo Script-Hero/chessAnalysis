@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
 import BoardPane from './BoardPane'
-import AnalysisTab from './AnalysisTab'
-import ReportView from './ReportView'
-import TreeTab from './TreeTab'
-import GraphTab from './GraphTab'
+import OverviewTab from './OverviewTab'
+import ExploreTab from './ExploreTab'
 import { parsePgn } from '../lib/pgn'
 import type { ParsedGame } from '../lib/pgn'
 import { analyzeGame, LiveEngine } from '../lib/stockfish'
@@ -35,7 +33,7 @@ function AnalysisLayout() {
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [liveEngineEnabled, setLiveEngineEnabled] = useState(false)
-  const [activeTab, setActiveTab] = useState<DashboardTab>('analysis')
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
   const liveEngineRef = useRef<LiveEngine | null>(null)
   const [liveLines, setLiveLines] = useState<EngineLine[]>([])
   const [liveDepth, setLiveDepth] = useState(0)
@@ -296,44 +294,22 @@ function AnalysisLayout() {
             <div className="dashboard-tabs">
               <button
                 type="button"
-                className={`dashboard-tabs__tab${activeTab === 'analysis' ? ' is-active' : ''}`}
-                onClick={() => setActiveTab('analysis')}
+                className={`dashboard-tabs__tab${activeTab === 'overview' ? ' is-active' : ''}`}
+                onClick={() => setActiveTab('overview')}
               >
-                Analysis
+                Overview
               </button>
               <button
                 type="button"
-                className={`dashboard-tabs__tab${activeTab === 'report' ? ' is-active' : ''}`}
-                onClick={() => setActiveTab('report')}
+                className={`dashboard-tabs__tab${activeTab === 'explore' ? ' is-active' : ''}`}
+                onClick={() => setActiveTab('explore')}
               >
-                Report
-              </button>
-              <button
-                type="button"
-                className={`dashboard-tabs__tab${activeTab === 'tree' ? ' is-active' : ''}`}
-                onClick={() => setActiveTab('tree')}
-              >
-                Tree
-              </button>
-              <button
-                type="button"
-                className={`dashboard-tabs__tab${activeTab === 'graph' ? ' is-active' : ''}`}
-                onClick={() => setActiveTab('graph')}
-              >
-                Graph
+                Explore
               </button>
             </div>
 
             <div className="dashboard-tabs__content">
-              {activeTab === 'analysis' ? (
-                <AnalysisTab />
-              ) : activeTab === 'report' ? (
-                <ReportView />
-              ) : activeTab === 'tree' ? (
-                <TreeTab />
-              ) : (
-                <GraphTab />
-              )}
+              {activeTab === 'overview' ? <OverviewTab /> : <ExploreTab />}
             </div>
           </div>
         </div>
