@@ -1,0 +1,101 @@
+.game-tree {
+  position: relative;
+  border: 1px solid rgba(201, 162, 75, 0.28);
+  background: rgba(23, 19, 15, 0.55);
+  padding: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.game-tree__svg {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.game-tree__rail {
+  stroke: var(--brass);
+  stroke-width: 2;
+  opacity: 0.5;
+}
+
+.game-tree__node {
+  cursor: pointer;
+}
+.game-tree__node--top {
+  fill: var(--brass-bright);
+}
+.game-tree__node--warning {
+  fill: var(--status-warning);
+}
+.game-tree__node--serious {
+  fill: var(--status-serious);
+}
+.game-tree__node--critical {
+  fill: var(--status-critical);
+}
+.game-tree__node.is-current {
+  stroke: var(--parchment);
+  stroke-width: 2;
+}
+
+.game-tree__label {
+  fill: var(--parchment-dim);
+}
+
+.game-tree__branch-path {
+  fill: none;
+  stroke: var(--status-good);
+  stroke-width: 1.5;
+  opacity: 0.75;
+}
+
+.game-tree__branch-dot {
+  fill: var(--status-good);
+  cursor: pointer;
+}
+
+.game-tree__branch-label {
+  fill: var(--status-good);
+  font-size: 10px;
+}
+
+.game-tree__collapsed-dot {
+  fill: var(--parchment-dim);
+  opacity: 0.5;
+  cursor: pointer;
+}
+.game-tree__collapsed-dot.is-current {
+  stroke: var(--parchment);
+  stroke-width: 2;
+  opacity: 0.8;
+}
+
+.game-tree__collapsed-label {
+  fill: var(--parchment-dim);
+  font-style: italic;
+  cursor: pointer;
+}
+
+.game-tree__node--mover-white {
+  stroke: var(--white-accent);
+  stroke-width: 1.5;
+}
+.game-tree__node--mover-black {
+  stroke: var(--black-accent);
+  stroke-width: 1.5;
+}
+.game-tree__node--mover-white.is-current,
+.game-tree__node--mover-black.is-current {
+  stroke: var(--parchment);
+  stroke-width: 2;
+}
+
+.game-tree__branch-dot--mover-white {
+  stroke: var(--white-accent);
+  stroke-width: 1.5;
+}
+.game-tree__branch-dot--mover-black {
+  stroke: var(--black-accent);
+  stroke-width: 1.5;
+}
