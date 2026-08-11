@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react'
 import type { ParsedGame } from '../lib/pgn'
 import type { EngineLine, MoveJudgment, PositionEval } from '../lib/stockfish'
 
-export type DashboardTab = 'analysis' | 'report' | 'tree' | 'graph'
+export type DashboardTab = 'overview' | 'explore'
 
 export type AnalysisContextValue = {
   game: ParsedGame
