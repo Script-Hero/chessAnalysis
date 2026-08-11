@@ -5,6 +5,7 @@ import CriticalMoments from '../components/overview/CriticalMoments'
 import MaterialChart from '../components/overview/MaterialChart'
 import TimePressureChart from '../components/overview/TimePressureChart'
 import GraphScatter from '../components/overview/GraphScatter'
+import GraphTimeline from '../components/overview/GraphTimeline'
 import GraphInsights from '../components/overview/GraphInsights'
 import { useAnalysis } from '../context/AnalysisContext'
 import { computeAccuracy, computePhaseAccuracy, findCriticalMoments, hasClockData } from '../lib/analysis'
@@ -119,6 +120,7 @@ function OverviewTab() {
             </span>
           ))}
         </div>
+        <GraphTimeline metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index + 1)} />
       </section>
 
       <section className="overview__section">
