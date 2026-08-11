@@ -7,6 +7,21 @@ export function moverOf(moveIndex: number): Side {
   return moveIndex % 2 === 0 ? 'white' : 'black'
 }
 
+/** The side to move in `fen`, per FEN's second field ('w' or 'b'). */
+export function sideToMove(fen: string): Side {
+  return fen.split(' ')[1] === 'w' ? 'white' : 'black'
+}
+
+/**
+ * The mover of a node at `depth` (1-indexed) in a tree rooted at a position
+ * whose side to move is `rootMover` — movers strictly alternate by depth,
+ * starting with `rootMover` at depth 1.
+ */
+export function moverAtDepth(rootMover: Side, depth: number): Side {
+  const otherSide: Side = rootMover === 'white' ? 'black' : 'white'
+  return depth % 2 === 1 ? rootMover : otherSide
+}
+
 // Lichess's win%-loss-to-accuracy curve: forgiving near 0% loss, punishing climbs fast after.
 function accuracyFromMeanLoss(meanLossPct: number): number {
   const raw = 103.1668 * Math.exp(-0.04354 * meanLossPct) - 3.1669
