@@ -105,7 +105,7 @@ function ExploreTab() {
           <LiveEnginePanel
             enabled={liveEngineEnabled}
             onToggle={setLiveEngineEnabled}
-            storedLines={lines?.[ply] ?? null}
+            storedLines={currentLines}
             liveLines={liveLines}
             liveDepth={liveDepth}
             fen={position}

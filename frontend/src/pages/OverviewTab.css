@@ -95,3 +95,8 @@
   border-radius: 50%;
   display: inline-block;
 }
+
+.overview__legend-dot--mover {
+  background: transparent;
+  border: 1.5px solid;
+}

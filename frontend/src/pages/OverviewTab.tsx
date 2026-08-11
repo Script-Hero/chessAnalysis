@@ -111,7 +111,7 @@ function OverviewTab() {
 
       <section className="overview__section">
         <h3 className="overview__heading">Move quality vs. how open the position was</h3>
-        <GraphScatter metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index + 1)} />
+        <GraphScatter metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
         <div className="overview__legend">
           {LEGEND_BUCKETS.map((bucket) => (
             <span key={bucket} className="overview__legend-item">
@@ -119,8 +119,16 @@ function OverviewTab() {
               {BUCKET_INFO[bucket].label}
             </span>
           ))}
+          <span className="overview__legend-item">
+            <span className="overview__legend-dot overview__legend-dot--mover" style={{ borderColor: 'var(--white-accent)' }} />
+            White to move
+          </span>
+          <span className="overview__legend-item">
+            <span className="overview__legend-dot overview__legend-dot--mover" style={{ borderColor: 'var(--black-accent)' }} />
+            Black to move
+          </span>
         </div>
-        <GraphTimeline metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index + 1)} />
+        <GraphTimeline metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
       </section>
 
       <section className="overview__section">
@@ -132,7 +140,7 @@ function OverviewTab() {
         moments={criticalMoments}
         positions={game.positions}
         currentPly={ply}
-        onJump={jumpToBoard}
+        onJump={(momentPly) => jumpToBoard(momentPly - 1)}
       />
     </div>
   )
