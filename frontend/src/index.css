@@ -17,6 +17,12 @@
   --status-good: #4caf7d;
   --tree-alt: #8b6fe0;
 
+  /* Wider-spaced warm ramp for the player-summary quality bar (Task 2 of the
+     2026-08-11 design review) — the existing warning/serious pair sit too
+     close in hue to read as distinct segments at a glance. */
+  --tier-inaccuracy-warm: #e08a2e;
+  --tier-mistake-warm: #c65a3a;
+
   --display: 'Fraunces', 'Iowan Old Style', serif;
   --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 
