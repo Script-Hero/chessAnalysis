@@ -312,6 +312,7 @@
 }
 
 .dashboard-tabs__tab {
+  position: relative;
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 500;
@@ -329,6 +330,17 @@
     background 160ms ease;
 }
 
+.dashboard-tabs__tab::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: -1px;
+  height: 2px;
+  background: rgba(201, 162, 75, 0.35);
+  transition: background 160ms ease;
+}
+
 .dashboard-tabs__tab:hover {
   color: var(--parchment);
 }
@@ -337,6 +349,10 @@
   color: var(--brass-bright);
   border-color: rgba(201, 162, 75, 0.4);
   background: rgba(201, 162, 75, 0.08);
+}
+
+.dashboard-tabs__tab.is-active::after {
+  background: var(--brass-bright);
 }
 
 .dashboard-tabs__content {
