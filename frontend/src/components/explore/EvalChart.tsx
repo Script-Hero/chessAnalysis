@@ -39,6 +39,8 @@ function EvalChart({ evals, moves, judgments, currentPly, onSelectPly }: EvalCha
   const xAt = (i: number) => PAD.left + (n === 1 ? 0 : (i / (n - 1)) * INNER_W)
   const yAt = (score: number) => MID_Y - (Math.max(-maxAbs, Math.min(maxAbs, score)) / maxAbs) * (INNER_H / 2)
 
+  const gridScores = [1, 3].filter((v) => v < maxAbs)
+
   const linePoints = evals.map((e, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(e.score)}`).join(' ')
   const areaPath = n === 0 ? '' : `${linePoints} L ${xAt(n - 1)} ${MID_Y} L ${xAt(0)} ${MID_Y} Z`
 
@@ -111,6 +113,31 @@ function EvalChart({ evals, moves, judgments, currentPly, onSelectPly }: EvalCha
           x2={VIEW_W - PAD.right}
           y2={MID_Y}
         />
+
+        {gridScores.map((v) => (
+          <g key={v}>
+            <line
+              className="eval-chart__gridline"
+              x1={PAD.left}
+              x2={VIEW_W - PAD.right}
+              y1={yAt(v)}
+              y2={yAt(v)}
+            />
+            <line
+              className="eval-chart__gridline"
+              x1={PAD.left}
+              x2={VIEW_W - PAD.right}
+              y1={yAt(-v)}
+              y2={yAt(-v)}
+            />
+            <text className="eval-chart__gridline-label" x={VIEW_W - PAD.right - 4} y={yAt(v) - 3} textAnchor="end">
+              +{v}
+            </text>
+            <text className="eval-chart__gridline-label" x={VIEW_W - PAD.right - 4} y={yAt(-v) - 3} textAnchor="end">
+              -{v}
+            </text>
+          </g>
+        ))}
 
         <path className="eval-chart__area eval-chart__area--white" d={areaPath} clipPath={`url(#${clipId}-above)`} />
         <path className="eval-chart__area eval-chart__area--black" d={areaPath} clipPath={`url(#${clipId}-below)`} />
