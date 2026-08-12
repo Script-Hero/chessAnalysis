@@ -5,10 +5,10 @@
   cursor: help;
 }
 .move-badge--warning {
-  color: var(--status-warning);
+  color: var(--tier-inaccuracy-warm);
 }
 .move-badge--serious {
-  color: var(--status-serious);
+  color: var(--tier-mistake-warm);
 }
 .move-badge--critical {
   color: var(--status-critical);

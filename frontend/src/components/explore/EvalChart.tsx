@@ -39,7 +39,8 @@ function EvalChart({ evals, moves, judgments, currentPly, onSelectPly }: EvalCha
   const xAt = (i: number) => PAD.left + (n === 1 ? 0 : (i / (n - 1)) * INNER_W)
   const yAt = (score: number) => MID_Y - (Math.max(-maxAbs, Math.min(maxAbs, score)) / maxAbs) * (INNER_H / 2)
 
-  const gridScores = [1, 3].filter((v) => v < maxAbs)
+  const gridStep = maxAbs > 6 ? Math.round(maxAbs / 3) : maxAbs > 2 ? 2 : 1
+  const gridScores = [gridStep, gridStep * 2].filter((v) => v < maxAbs && v > 0)
 
   const linePoints = evals.map((e, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(e.score)}`).join(' ')
   const areaPath = n === 0 ? '' : `${linePoints} L ${xAt(n - 1)} ${MID_Y} L ${xAt(0)} ${MID_Y} Z`
@@ -86,17 +87,18 @@ function EvalChart({ evals, moves, judgments, currentPly, onSelectPly }: EvalCha
         </span>
       </div>
 
-      <svg
-        ref={svgRef}
-        className="eval-chart__svg"
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        preserveAspectRatio="none"
-        onPointerMove={handlePointerMove}
-        onPointerLeave={() => setHoverPly(null)}
-        onClick={handleClick}
-        role="img"
-        aria-label="Engine evaluation across the game"
-      >
+      <div className="eval-chart__chart">
+        <svg
+          ref={svgRef}
+          className="eval-chart__svg"
+          viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+          preserveAspectRatio="none"
+          onPointerMove={handlePointerMove}
+          onPointerLeave={() => setHoverPly(null)}
+          onClick={handleClick}
+          role="img"
+          aria-label="Engine evaluation across the game"
+        >
         <defs>
           <clipPath id={`${clipId}-above`}>
             <rect x={0} y={0} width={VIEW_W} height={MID_Y} />
@@ -130,12 +132,6 @@ function EvalChart({ evals, moves, judgments, currentPly, onSelectPly }: EvalCha
               y1={yAt(-v)}
               y2={yAt(-v)}
             />
-            <text className="eval-chart__gridline-label" x={VIEW_W - PAD.right - 4} y={yAt(v) - 3} textAnchor="end">
-              +{v}
-            </text>
-            <text className="eval-chart__gridline-label" x={VIEW_W - PAD.right - 4} y={yAt(-v) - 3} textAnchor="end">
-              -{v}
-            </text>
           </g>
         ))}
 
@@ -193,7 +189,25 @@ function EvalChart({ evals, moves, judgments, currentPly, onSelectPly }: EvalCha
             r={4}
           />
         )}
-      </svg>
+        </svg>
+
+        {gridScores.map((v) => (
+          <div key={v} className="eval-chart__gridline-labels">
+            <span
+              className="eval-chart__gridline-label"
+              style={{ top: `${(yAt(v) / VIEW_H) * 100}%` }}
+            >
+              +{v}
+            </span>
+            <span
+              className="eval-chart__gridline-label"
+              style={{ top: `${(yAt(-v) / VIEW_H) * 100}%` }}
+            >
+              -{v}
+            </span>
+          </div>
+        ))}
+      </div>
 
       <div className="eval-chart__legend">
         <span className="eval-chart__legend-item">

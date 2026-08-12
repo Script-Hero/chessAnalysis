@@ -88,8 +88,10 @@ function GameTree({ rows, currentPly, onSelectPly, collapseThreshold }: GameTree
     if (!container) return
     const rowY = PAD_TOP + currentRowIndex * ROW_PITCH
     const targetScrollTop = rowY - container.clientHeight / 2
-    container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' })
-  }, [currentRowIndex])
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: reduceMotion ? 'auto' : 'smooth' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPly])
 
   const showHover = (e: ReactMouseEvent, node: { fen: string; san: string }) =>
     setHover({ fen: node.fen, san: node.san, x: e.clientX, y: e.clientY })

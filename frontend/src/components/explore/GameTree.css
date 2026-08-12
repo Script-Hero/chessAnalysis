@@ -26,10 +26,10 @@
   fill: var(--brass-bright);
 }
 .game-tree__node--warning {
-  fill: var(--status-warning);
+  fill: var(--tier-inaccuracy-warm);
 }
 .game-tree__node--serious {
-  fill: var(--status-serious);
+  fill: var(--tier-mistake-warm);
 }
 .game-tree__node--critical {
   fill: var(--status-critical);
