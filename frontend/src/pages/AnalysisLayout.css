@@ -148,18 +148,24 @@
   position: absolute;
   width: 22px;
   height: 22px;
-  border: 1.5px solid var(--brass);
-  opacity: 0.55;
+  border: 2px solid var(--brass);
+  opacity: 0.85;
   transition:
     opacity 220ms ease,
     width 220ms ease,
-    height 220ms ease;
+    height 220ms ease,
+    border-color 220ms ease;
+}
+
+.dropzone:hover .dropzone__corner {
+  border-color: var(--brass-bright);
 }
 
 .dropzone--active .dropzone__corner {
   opacity: 1;
   width: 30px;
   height: 30px;
+  border-color: var(--brass-bright);
 }
 
 .dropzone__corner--tl {
