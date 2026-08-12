@@ -6,7 +6,10 @@ import { useAnalysis } from '../context/AnalysisContext'
 import { LAST_MOVE_HIGHLIGHT, SQUARE_DARK, SQUARE_LIGHT } from '../lib/boardTheme'
 import './BoardPane.css'
 
-const ARROW_COLORS = ['rgba(232, 195, 117, 0.9)', 'rgba(232, 195, 117, 0.55)', 'rgba(232, 195, 117, 0.3)']
+// Three distinct hues (not three opacities of one hue) so overlapping
+// candidate-line arrows stay separable when two lines share squares — the
+// same problem PositionTree already solves with --brass-bright / --tree-alt.
+const ARROW_COLORS = ['rgba(232, 195, 117, 0.85)', 'rgba(127, 168, 232, 0.8)', 'rgba(139, 111, 224, 0.75)']
 
 function BoardPane() {
   const {
