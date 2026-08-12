@@ -119,9 +119,15 @@
 
 .board-pane__move-row {
   display: grid;
-  grid-template-columns: 34px 1fr 1fr;
+  grid-template-columns: 34px minmax(64px, auto) minmax(64px, auto) 1fr;
   align-items: center;
   gap: 4px;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.board-pane__move-row:hover {
+  background: rgba(201, 162, 75, 0.05);
 }
 
 .board-pane__move-number {
