@@ -237,7 +237,7 @@ function AnalysisLayout() {
           <input
             ref={inputRef}
             type="file"
-            accept=".pgn"
+            accept=".pgn,.txt"
             className="dropzone__input"
             onChange={(e) => acceptFile(e.target.files?.[0])}
           />
