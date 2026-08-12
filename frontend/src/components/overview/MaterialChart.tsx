@@ -47,7 +47,7 @@ function MaterialChart({ positions, currentPly, onSelectPly }: MaterialChartProp
   return (
     <div className="material-chart">
       <div className="material-chart__header">
-        <span className="material-chart__title">Material balance</span>
+        <h3 className="material-chart__title">Material balance</h3>
         <span className="material-chart__readout">
           {activeValue > 0 ? `White +${activeValue}` : activeValue < 0 ? `Black +${-activeValue}` : 'Even'}
         </span>

@@ -10,16 +10,16 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 14px;
 }
 
 .material-chart__title {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--parchment-dim);
-  opacity: 0.75;
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--parchment);
+  margin: 0;
 }
 
 .material-chart__readout {
