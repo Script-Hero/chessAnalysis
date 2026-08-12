@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { moverAtDepth } from '../../lib/analysis'
 import { DEFAULT_BRANCH_PLIES, groupGameTreeRows } from '../../lib/tree'
@@ -51,6 +51,7 @@ type RenderItem =
 function GameTree({ rows, currentPly, onSelectPly, collapseThreshold }: GameTreeProps) {
   const [hover, setHover] = useState<HoverTarget | null>(null)
   const [expandedRuns, setExpandedRuns] = useState<Set<number>>(new Set())
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // A threshold change invalidates the previous grouping — there's no
   // meaningful way to carry "this run is expanded" forward across a regroup.
@@ -73,6 +74,23 @@ function GameTree({ rows, currentPly, onSelectPly, collapseThreshold }: GameTree
   const height = PAD_TOP * 2 + renderItems.length * ROW_PITCH
   const width = RAIL_X + BRANCH_DX * (DEFAULT_BRANCH_PLIES + 1) + 160
 
+  const currentRowIndex = renderItems.findIndex((item) =>
+    item.type === 'row' ? item.row.ply === currentPly : currentPly >= item.startPly && currentPly <= item.endPly,
+  )
+
+  // Keep the current-ply marker in view whenever the viewed ply changes
+  // (including on first mount) — otherwise, on a long game, the marker
+  // GameTree already draws for `currentPly` can sit far below the visible
+  // 480px scroll window with no indication it exists.
+  useEffect(() => {
+    if (currentRowIndex < 0) return
+    const container = containerRef.current
+    if (!container) return
+    const rowY = PAD_TOP + currentRowIndex * ROW_PITCH
+    const targetScrollTop = rowY - container.clientHeight / 2
+    container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' })
+  }, [currentRowIndex])
+
   const showHover = (e: ReactMouseEvent, node: { fen: string; san: string }) =>
     setHover({ fen: node.fen, san: node.san, x: e.clientX, y: e.clientY })
 
@@ -81,7 +99,7 @@ function GameTree({ rows, currentPly, onSelectPly, collapseThreshold }: GameTree
   let branchIndex = 0
 
   return (
-    <div className="game-tree">
+    <div className="game-tree" ref={containerRef}>
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} className="game-tree__svg">
         <line x1={RAIL_X} y1={PAD_TOP} x2={RAIL_X} y2={height - PAD_TOP} className="game-tree__rail" />
 
