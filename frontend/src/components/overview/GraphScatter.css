@@ -15,8 +15,9 @@
 
 .graph-scatter__tick {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 9px;
   fill: var(--parchment-dim);
+  opacity: 0.85;
 }
 
 .graph-scatter__axis-label {

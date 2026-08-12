@@ -74,6 +74,28 @@ function OverviewTab() {
       <PlayerSummary white={white} black={black} accuracy={accuracy} />
 
       <section className="overview__section">
+        <h3 className="overview__heading">Move quality vs. how open the position was</h3>
+        <GraphScatter metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
+        <div className="overview__legend">
+          {LEGEND_BUCKETS.map((bucket) => (
+            <span key={bucket} className="overview__legend-item">
+              <span className="overview__legend-dot" style={{ background: `var(${BUCKET_INFO[bucket].colorVar})` }} />
+              {BUCKET_INFO[bucket].label}
+            </span>
+          ))}
+          <span className="overview__legend-item">
+            <span className="overview__legend-dot overview__legend-dot--mover" style={{ borderColor: 'var(--white-accent)' }} />
+            White to move
+          </span>
+          <span className="overview__legend-item">
+            <span className="overview__legend-dot overview__legend-dot--mover" style={{ borderColor: 'var(--black-accent)' }} />
+            Black to move
+          </span>
+        </div>
+        <GraphTimeline metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
+      </section>
+
+      <section className="overview__section">
         <div className="overview__stat-row">
           <div className="overview__stat overview__stat--caution">
             <span className="overview__stat-n">{counts['blunder-forced'] ?? 0}</span>
@@ -108,28 +130,6 @@ function OverviewTab() {
           onSelectPly={jumpToBoard}
         />
       )}
-
-      <section className="overview__section">
-        <h3 className="overview__heading">Move quality vs. how open the position was</h3>
-        <GraphScatter metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
-        <div className="overview__legend">
-          {LEGEND_BUCKETS.map((bucket) => (
-            <span key={bucket} className="overview__legend-item">
-              <span className="overview__legend-dot" style={{ background: `var(${BUCKET_INFO[bucket].colorVar})` }} />
-              {BUCKET_INFO[bucket].label}
-            </span>
-          ))}
-          <span className="overview__legend-item">
-            <span className="overview__legend-dot overview__legend-dot--mover" style={{ borderColor: 'var(--white-accent)' }} />
-            White to move
-          </span>
-          <span className="overview__legend-item">
-            <span className="overview__legend-dot overview__legend-dot--mover" style={{ borderColor: 'var(--black-accent)' }} />
-            Black to move
-          </span>
-        </div>
-        <GraphTimeline metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
-      </section>
 
       <section className="overview__section">
         <h3 className="overview__heading">Signals</h3>
