@@ -24,8 +24,11 @@ function CriticalMoments({ moments, positions, currentPly, onJump }: CriticalMom
     [moments, filter],
   )
 
-  const prevMoment = [...filtered].reverse().find((m) => m.ply < currentPly)
-  const nextMoment = filtered.find((m) => m.ply > currentPly)
+  // onJump maps moment.ply -> currentPly - 1 (Explore's forward-looking convention), so
+  // comparisons against currentPly must offset by one to match against moment.ply values.
+  const selectedPly = currentPly + 1
+  const prevMoment = [...filtered].reverse().find((m) => m.ply < selectedPly)
+  const nextMoment = filtered.find((m) => m.ply > selectedPly)
 
   if (moments.length === 0) {
     return (
@@ -96,7 +99,7 @@ function CriticalMoments({ moments, positions, currentPly, onJump }: CriticalMom
           {filtered.map((moment) => {
             const moveNumber = Math.floor((moment.ply - 1) / 2) + 1
             const label = moment.mover === 'white' ? `${moveNumber}.` : `${moveNumber}...`
-            const isActive = moment.ply === currentPly
+            const isActive = moment.ply === selectedPly
             return (
               <button
                 key={moment.ply}
