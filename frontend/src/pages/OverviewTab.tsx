@@ -75,19 +75,19 @@ function OverviewTab() {
 
       <section className="overview__section">
         <div className="overview__stat-row">
-          <div className="overview__stat">
+          <div className="overview__stat overview__stat--caution">
             <span className="overview__stat-n">{counts['blunder-forced'] ?? 0}</span>
             <span className="overview__stat-label">should've been found</span>
           </div>
-          <div className="overview__stat">
+          <div className="overview__stat overview__stat--neutral">
             <span className="overview__stat-n">{counts['blunder-open'] ?? 0}</span>
             <span className="overview__stat-label">genuinely hard misses</span>
           </div>
-          <div className="overview__stat">
+          <div className="overview__stat overview__stat--caution">
             <span className="overview__stat-n">{counts['drift'] ?? 0}</span>
             <span className="overview__stat-label">silent drift, untagged</span>
           </div>
-          <div className="overview__stat">
+          <div className="overview__stat overview__stat--good">
             <span className="overview__stat-n">{counts['precise'] ?? 0}</span>
             <span className="overview__stat-label">precise, needle found</span>
           </div>

@@ -54,11 +54,24 @@
 .overview__stat {
   flex: 1 1 130px;
   border: 1px solid rgba(201, 162, 75, 0.18);
+  border-top: 2px solid rgba(201, 162, 75, 0.18);
   background: rgba(236, 226, 206, 0.02);
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.overview__stat--good {
+  border-top-color: var(--status-good);
+}
+
+.overview__stat--caution {
+  border-top-color: var(--status-warning);
+}
+
+.overview__stat--neutral {
+  border-top-color: rgba(201, 162, 75, 0.18);
 }
 
 .overview__stat-n {
