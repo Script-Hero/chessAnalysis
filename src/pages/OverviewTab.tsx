@@ -23,7 +23,7 @@ const LEGEND_BUCKETS: MoveBucket[] = [
 ]
 
 function OverviewTab() {
-  const { game, ply, goTo, judgments, evals, lines, setActiveTab } = useAnalysis()
+  const { game, ply, goTo, judgments, evals, lines, setActiveTab, moveFilter } = useAnalysis()
 
   const white = game.headers.White ?? 'White'
   const black = game.headers.Black ?? 'Black'
@@ -44,12 +44,18 @@ function OverviewTab() {
     return computePlyMetrics(game, judgments, lines)
   }, [game, judgments, lines])
 
+  const filteredMetrics = useMemo(() => {
+    if (!metrics) return null
+    if (moveFilter === 'both') return metrics
+    return metrics.filter((m) => m.mover === moveFilter)
+  }, [metrics, moveFilter])
+
   const jumpToBoard = (targetPly: number) => {
     goTo(targetPly)
     setActiveTab('explore')
   }
 
-  if (!evals || !judgments || !accuracy || !phaseAccuracy || !metrics) {
+  if (!evals || !judgments || !accuracy || !phaseAccuracy || !metrics || !filteredMetrics) {
     return (
       <div className="overview">
         <div className="overview__pending">
@@ -75,7 +81,7 @@ function OverviewTab() {
 
       <section className="overview__section">
         <h3 className="overview__heading">Move quality vs. how open the position was</h3>
-        <GraphScatter metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
+        <GraphScatter metrics={filteredMetrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
         <div className="overview__legend">
           {LEGEND_BUCKETS.map((bucket) => (
             <span key={bucket} className="overview__legend-item">
@@ -92,7 +98,7 @@ function OverviewTab() {
             Black to move
           </span>
         </div>
-        <GraphTimeline metrics={metrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
+        <GraphTimeline metrics={filteredMetrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
       </section>
 
       <section className="overview__section">

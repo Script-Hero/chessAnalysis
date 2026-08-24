@@ -8,18 +8,24 @@ type GraphScatterProps = {
   onSelect: (index: number) => void
 }
 
-const WIDTH = 560
-const HEIGHT = 300
-const PAD_L = 40
-const PAD_R = 16
-const PAD_T = 16
-const PAD_B = 36
+const WIDTH = 820
+const HEIGHT = 420
+const PAD_L = 52
+const PAD_R = 20
+const PAD_T = 20
+const PAD_B = 44
 const Y_MAX = 60 // rawLossPct clamp — a handful of outlier blunders run much higher than this
 
 function moveLabel(m: PlyMetric): string {
   const moveNumber = Math.floor(m.index / 2) + 1
   return m.mover === 'white' ? `${moveNumber}.${m.san}` : `${moveNumber}…${m.san}`
 }
+
+// Most moves cost 0-5%; a handful of blunders cost 30-60%. A linear axis crushes
+// the common case into a thin strip at the bottom. Square-root spacing gives the
+// low-cost majority room to spread out while still keeping outliers on-chart.
+const yScale = (lossPct: number) => Math.sqrt(Math.min(lossPct, Y_MAX))
+const Y_SCALE_MAX = yScale(Y_MAX)
 
 function GraphScatter({ metrics, selectedIndex, onSelect }: GraphScatterProps) {
   const innerW = WIDTH - PAD_L - PAD_R
@@ -28,14 +34,14 @@ function GraphScatter({ metrics, selectedIndex, onSelect }: GraphScatterProps) {
   const points = metrics.filter((m) => m.entropy !== null && m.rawLossPct !== null)
 
   const xOf = (entropy: number) => PAD_L + entropy * innerW
-  const yOf = (lossPct: number) => PAD_T + innerH - (Math.min(lossPct, Y_MAX) / Y_MAX) * innerH
+  const yOf = (lossPct: number) => PAD_T + innerH - (yScale(lossPct) / Y_SCALE_MAX) * innerH
 
   const gridX = [0, 0.25, 0.5, 0.75, 1]
-  const gridY = [0, 15, 30, 45, 60]
+  const gridY = [0, 5, 15, 30, 60]
 
   return (
     <div className="graph-scatter">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="100%" height={HEIGHT} className="graph-scatter__svg">
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="graph-scatter__svg">
         {gridY.map((v) => (
           <g key={`y-${v}`}>
             <line x1={PAD_L} x2={WIDTH - PAD_R} y1={yOf(v)} y2={yOf(v)} className="graph-scatter__grid" />
@@ -73,11 +79,11 @@ function GraphScatter({ metrics, selectedIndex, onSelect }: GraphScatterProps) {
               key={m.index}
               cx={cx}
               cy={cy}
-              r={isSelected ? 6 : 4}
+              r={isSelected ? 9 : 6}
               fill={color}
-              opacity={isSelected ? 1 : 0.75}
+              opacity={isSelected ? 1 : 0.78}
               stroke={isSelected ? 'var(--brass-bright)' : moverColor}
-              strokeWidth={1.5}
+              strokeWidth={2}
               className="graph-scatter__point"
               onClick={() => onSelect(m.index)}
             >

@@ -3,6 +3,7 @@ import type { ParsedGame } from '../lib/pgn'
 import type { EngineLine, MoveJudgment, PositionEval } from '../lib/stockfish'
 
 export type DashboardTab = 'overview' | 'explore'
+export type MoveFilter = 'white' | 'black' | 'both'
 
 export type AnalysisContextValue = {
   game: ParsedGame
@@ -24,6 +25,8 @@ export type AnalysisContextValue = {
   liveDepth: number
   activeTab: DashboardTab
   setActiveTab: (tab: DashboardTab) => void
+  moveFilter: MoveFilter
+  setMoveFilter: (filter: MoveFilter) => void
 }
 
 export const AnalysisContext = createContext<AnalysisContextValue | null>(null)

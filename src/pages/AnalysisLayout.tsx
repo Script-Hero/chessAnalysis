@@ -9,7 +9,7 @@ import { analyzeGame, LiveEngine } from '../lib/stockfish'
 import type { EngineLine, MoveJudgment, PositionEval } from '../lib/stockfish'
 import { clearAnalysisCache, loadAnalysisCache, saveAnalysisCache } from '../lib/cache'
 import { AnalysisContext } from '../context/AnalysisContext'
-import type { AnalysisContextValue, DashboardTab } from '../context/AnalysisContext'
+import type { AnalysisContextValue, DashboardTab, MoveFilter } from '../context/AnalysisContext'
 import './AnalysisLayout.css'
 
 const LIVE_DEPTH = 20
@@ -34,6 +34,7 @@ function AnalysisLayout() {
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [liveEngineEnabled, setLiveEngineEnabled] = useState(false)
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
+  const [moveFilter, setMoveFilter] = useState<MoveFilter>('both')
   const liveEngineRef = useRef<LiveEngine | null>(null)
   const [liveLines, setLiveLines] = useState<EngineLine[]>([])
   const [liveDepth, setLiveDepth] = useState(0)
@@ -186,6 +187,7 @@ function AnalysisLayout() {
     setLiveEngineEnabled(false)
     setPly(0)
     setOrientation('white')
+    setMoveFilter('both')
     if (inputRef.current) inputRef.current.value = ''
   }
 
@@ -308,6 +310,8 @@ function AnalysisLayout() {
     liveDepth,
     activeTab,
     setActiveTab,
+    moveFilter,
+    setMoveFilter,
   }
 
   return (
@@ -348,6 +352,27 @@ function AnalysisLayout() {
               >
                 Explore
               </button>
+
+              {activeTab === 'overview' && (
+                <div className="move-filter" role="group" aria-label="Filter graphs by mover">
+                  {(
+                    [
+                      ['white', game.headers.White || 'White'],
+                      ['both', 'Both'],
+                      ['black', game.headers.Black || 'Black'],
+                    ] as [MoveFilter, string][]
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`move-filter__option${moveFilter === value ? ' is-active' : ''}`}
+                      onClick={() => setMoveFilter(value)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="dashboard-tabs__content">
