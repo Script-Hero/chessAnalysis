@@ -139,7 +139,7 @@ function OverviewTab() {
 
       <section className="overview__section">
         <h3 className="overview__heading">Signals</h3>
-        <GraphInsights metrics={metrics} />
+        <GraphInsights metrics={metrics} whiteLabel={white} blackLabel={black} />
       </section>
 
       <CriticalMoments

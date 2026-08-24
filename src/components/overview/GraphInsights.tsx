@@ -1,50 +1,76 @@
 import { computeAggregateInsights, isThinSample, HIGH_ENTROPY, LOW_ENTROPY } from '../../lib/graphMetrics'
 import type { PlyMetric, Comparison } from '../../lib/graphMetrics'
+import type { Side } from '../../lib/analysis'
 import './GraphInsights.css'
 
-type GraphInsightsProps = { metrics: PlyMetric[] }
+type GraphInsightsProps = { metrics: PlyMetric[]; whiteLabel: string; blackLabel: string }
 
-function ComparisonBar({
-  comparison,
-  labelA,
-  labelB,
+function MoverBar({
+  mover,
+  moverLabel,
+  n,
+  value,
   format,
   max,
 }: {
-  comparison: Comparison
-  labelA: string
-  labelB: string
+  mover: Side
+  moverLabel: string
+  n: number
+  value: number | null
   format: (v: number) => string
   max: number
 }) {
-  const { a, nA, b, nB } = comparison
-  const thin = isThinSample(nA) || isThinSample(nB)
+  return (
+    <div className="graph-insights__bar-line">
+      <span className={`graph-insights__bar-label graph-insights__bar-label--${mover}`}>
+        <span className="graph-insights__bar-label-name">{moverLabel}</span>
+        <span className="graph-insights__n">n={n}</span>
+      </span>
+      <div className="graph-insights__bar-track">
+        <div
+          className={`graph-insights__bar-fill graph-insights__bar-fill--${mover}`}
+          style={{ width: value === null ? 0 : `${Math.min(100, (value / max) * 100)}%` }}
+        />
+      </div>
+      <span className="graph-insights__bar-value">{value === null ? '—' : format(value)}</span>
+    </div>
+  )
+}
+
+function SplitComparisonBar({
+  labelA,
+  labelB,
+  whiteLabel,
+  blackLabel,
+  white,
+  black,
+  format,
+  max,
+}: {
+  labelA: string
+  labelB: string
+  whiteLabel: string
+  blackLabel: string
+  white: Comparison
+  black: Comparison
+  format: (v: number) => string
+  max: number
+}) {
+  const thin = [white.nA, white.nB, black.nA, black.nB].some(isThinSample)
   return (
     <div className="graph-insights__row">
-      <div className="graph-insights__bar-group">
-        <div className="graph-insights__bar-line">
-          <span className="graph-insights__bar-label">
-            {labelA} <span className="graph-insights__n">(n={nA})</span>
-          </span>
-          <div className="graph-insights__bar-track">
-            <div
-              className="graph-insights__bar-fill graph-insights__bar-fill--a"
-              style={{ width: a === null ? 0 : `${Math.min(100, (a / max) * 100)}%` }}
-            />
-          </div>
-          <span className="graph-insights__bar-value">{a === null ? '—' : format(a)}</span>
+      <div className="graph-insights__group">
+        <span className="graph-insights__group-label">{labelA}</span>
+        <div className="graph-insights__bar-group">
+          <MoverBar mover="white" moverLabel={whiteLabel} n={white.nA} value={white.a} format={format} max={max} />
+          <MoverBar mover="black" moverLabel={blackLabel} n={black.nA} value={black.a} format={format} max={max} />
         </div>
-        <div className="graph-insights__bar-line">
-          <span className="graph-insights__bar-label">
-            {labelB} <span className="graph-insights__n">(n={nB})</span>
-          </span>
-          <div className="graph-insights__bar-track">
-            <div
-              className="graph-insights__bar-fill graph-insights__bar-fill--b"
-              style={{ width: b === null ? 0 : `${Math.min(100, (b / max) * 100)}%` }}
-            />
-          </div>
-          <span className="graph-insights__bar-value">{b === null ? '—' : format(b)}</span>
+      </div>
+      <div className="graph-insights__group">
+        <span className="graph-insights__group-label">{labelB}</span>
+        <div className="graph-insights__bar-group">
+          <MoverBar mover="white" moverLabel={whiteLabel} n={white.nB} value={white.b} format={format} max={max} />
+          <MoverBar mover="black" moverLabel={blackLabel} n={black.nB} value={black.b} format={format} max={max} />
         </div>
       </div>
       {thin && <p className="graph-insights__caveat">Sample too thin to trust yet — needs more analyzed games.</p>}
@@ -56,12 +82,31 @@ function pct(v: number): string {
   return `${Math.round(v * 100)}%`
 }
 
-function GraphInsights({ metrics }: GraphInsightsProps) {
-  const insights = computeAggregateInsights(metrics)
-  const standing = insights.lossByStanding
-  const standingThin =
-    isThinSample(standing.nPrecise) || isThinSample(standing.nNearTie) || isThinSample(standing.nDrift)
-  const standingMax = Math.max(standing.precise ?? 0, standing.nearTie ?? 0, standing.drift ?? 0, 10)
+function GraphInsights({ metrics, whiteLabel, blackLabel }: GraphInsightsProps) {
+  const whiteMetrics = metrics.filter((m) => m.mover === 'white')
+  const blackMetrics = metrics.filter((m) => m.mover === 'black')
+  const white = computeAggregateInsights(whiteMetrics)
+  const black = computeAggregateInsights(blackMetrics)
+
+  const standingWhite = white.lossByStanding
+  const standingBlack = black.lossByStanding
+  const standingThin = [
+    standingWhite.nPrecise,
+    standingWhite.nNearTie,
+    standingWhite.nDrift,
+    standingBlack.nPrecise,
+    standingBlack.nNearTie,
+    standingBlack.nDrift,
+  ].some(isThinSample)
+  const standingMax = Math.max(
+    standingWhite.precise ?? 0,
+    standingWhite.nearTie ?? 0,
+    standingWhite.drift ?? 0,
+    standingBlack.precise ?? 0,
+    standingBlack.nearTie ?? 0,
+    standingBlack.drift ?? 0,
+    10,
+  )
 
   return (
     <div className="graph-insights">
@@ -71,10 +116,13 @@ function GraphInsights({ metrics }: GraphInsightsProps) {
           Share of moves that weren't even among the engine's top candidates, split by whether the move was
           flagged bad or not.
         </p>
-        <ComparisonBar
-          comparison={insights.offGraphRateByOutcome}
+        <SplitComparisonBar
           labelA="Flagged bad"
           labelB="Not flagged"
+          whiteLabel={whiteLabel}
+          blackLabel={blackLabel}
+          white={white.offGraphRateByOutcome}
+          black={black.offGraphRateByOutcome}
           format={pct}
           max={1}
         />
@@ -86,10 +134,13 @@ function GraphInsights({ metrics }: GraphInsightsProps) {
           How forced the position looked to the engine, for flagged-bad moves vs. everything else. Lower means the
           position looked more "obviously forced" — there was less to choose between.
         </p>
-        <ComparisonBar
-          comparison={insights.entropyByOutcome}
+        <SplitComparisonBar
           labelA="Flagged bad"
           labelB="Not flagged"
+          whiteLabel={whiteLabel}
+          blackLabel={blackLabel}
+          white={white.entropyByOutcome}
+          black={black.entropyByOutcome}
           format={(v) => v.toFixed(2)}
           max={1}
         />
@@ -102,17 +153,20 @@ function GraphInsights({ metrics }: GraphInsightsProps) {
           positions (entropy&nbsp;&lt;&nbsp;{LOW_ENTROPY}) vs. wide-open ones (entropy&nbsp;≥&nbsp;{HIGH_ENTROPY}). A
           drop here means "not blundering" is an easier bar to clear than "finding the single best move."
         </p>
-        <ComparisonBar
-          comparison={insights.rank1RateByOpenness}
+        <SplitComparisonBar
           labelA="Narrow position"
           labelB="Wide-open position"
+          whiteLabel={whiteLabel}
+          blackLabel={blackLabel}
+          white={white.rank1RateByOpenness}
+          black={black.rank1RateByOpenness}
           format={pct}
           max={1}
         />
       </div>
 
       <div className="graph-insights__block">
-        <h4 className="graph-insights__title">Missing the top move still costs you, even unflagged</h4>
+        <h4 className="graph-insights__title">Missing the top move still costs evaluation, even unflagged</h4>
         <p className="graph-insights__desc">
           Non-flagged moves in wide-open positions, split by whether the played move matched the engine exactly,
           was a near-tied alternative, or wasn't among the engine's candidates at all ("silent drift"). Silent
@@ -121,27 +175,47 @@ function GraphInsights({ metrics }: GraphInsightsProps) {
         <div className="graph-insights__standing">
           {(
             [
-              ['Exact match', standing.precise, standing.nPrecise, '--status-good'],
-              ['Near-tie', standing.nearTie, standing.nNearTie, '--white-accent'],
-              ['Silent drift', standing.drift, standing.nDrift, '--status-warning'],
+              ['Exact match', standingWhite.precise, standingWhite.nPrecise, standingBlack.precise, standingBlack.nPrecise],
+              ['Near-tie', standingWhite.nearTie, standingWhite.nNearTie, standingBlack.nearTie, standingBlack.nNearTie],
+              ['Silent drift', standingWhite.drift, standingWhite.nDrift, standingBlack.drift, standingBlack.nDrift],
             ] as const
-          ).map(([label, value, n, colorVar]) => (
+          ).map(([label, valueWhite, nWhite, valueBlack, nBlack]) => (
             <div key={label} className="graph-insights__standing-col">
-              <div className="graph-insights__standing-track">
-                <div
-                  className="graph-insights__standing-fill"
-                  style={{
-                    height: value === null ? 0 : `${Math.min(100, (value / standingMax) * 100)}%`,
-                    background: `var(${colorVar})`,
-                  }}
-                />
+              <div className="graph-insights__standing-bars">
+                <div className="graph-insights__standing-track">
+                  <div
+                    className="graph-insights__standing-fill graph-insights__standing-fill--white"
+                    style={{ height: valueWhite === null ? 0 : `${Math.min(100, (valueWhite / standingMax) * 100)}%` }}
+                  />
+                </div>
+                <div className="graph-insights__standing-track">
+                  <div
+                    className="graph-insights__standing-fill graph-insights__standing-fill--black"
+                    style={{ height: valueBlack === null ? 0 : `${Math.min(100, (valueBlack / standingMax) * 100)}%` }}
+                  />
+                </div>
               </div>
-              <span className="graph-insights__standing-value">{value === null ? '—' : `${value.toFixed(0)}%`}</span>
-              <span className="graph-insights__standing-label">
-                {label} <span className="graph-insights__n">(n={n})</span>
-              </span>
+              <div className="graph-insights__standing-values">
+                <span className="graph-insights__standing-value">
+                  {valueWhite === null ? '—' : `${valueWhite.toFixed(0)}%`} <span className="graph-insights__n">(n={nWhite})</span>
+                </span>
+                <span className="graph-insights__standing-value">
+                  {valueBlack === null ? '—' : `${valueBlack.toFixed(0)}%`} <span className="graph-insights__n">(n={nBlack})</span>
+                </span>
+              </div>
+              <span className="graph-insights__standing-label">{label}</span>
             </div>
           ))}
+        </div>
+        <div className="graph-insights__standing-legend">
+          <span className="graph-insights__legend-item">
+            <span className="graph-insights__legend-dot graph-insights__legend-dot--white" />
+            {whiteLabel}
+          </span>
+          <span className="graph-insights__legend-item">
+            <span className="graph-insights__legend-dot graph-insights__legend-dot--black" />
+            {blackLabel}
+          </span>
         </div>
         {standingThin && (
           <p className="graph-insights__caveat">Sample too thin to trust yet — needs more analyzed games.</p>

@@ -24,7 +24,7 @@ function moveLabel(m: PlyMetric): string {
 // Most moves cost 0-5%; a handful of blunders cost 30-60%. A linear axis crushes
 // the common case into a thin strip at the bottom. Square-root spacing gives the
 // low-cost majority room to spread out while still keeping outliers on-chart.
-const yScale = (lossPct: number) => Math.sqrt(Math.min(lossPct, Y_MAX))
+const yScale = (lossPct: number) => Math.sqrt(Math.max(0, Math.min(lossPct, Y_MAX)))
 const Y_SCALE_MAX = yScale(Y_MAX)
 
 function GraphScatter({ metrics, selectedIndex, onSelect }: GraphScatterProps) {
