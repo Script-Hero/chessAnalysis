@@ -38,21 +38,50 @@ function AnalysisLayout() {
   const [liveLines, setLiveLines] = useState<EngineLine[]>([])
   const [liveDepth, setLiveDepth] = useState(0)
 
-  const acceptFile = useCallback(async (file: File | undefined) => {
-    if (!file) return
-    setFileName(file.name)
+  const loadPgnText = useCallback(
+    (text: string, nameHint: string | ((headers: Record<string, string>) => string)) => {
+      setError(null)
+      try {
+        const parsed = parsePgn(text)
+        setFileName(typeof nameHint === 'function' ? nameHint(parsed.headers) : nameHint)
+        setGame(parsed)
+        setPgnText(text)
+        setPly(parsed.moves.length)
+      } catch {
+        setGame(null)
+        setError("Couldn't read that as a PGN game.")
+      }
+    },
+    [],
+  )
+
+  const acceptFile = useCallback(
+    async (file: File | undefined) => {
+      if (!file) return
+      const text = await file.text()
+      loadPgnText(text, file.name)
+    },
+    [loadPgnText],
+  )
+
+  const pasteFromClipboard = useCallback(async () => {
     setError(null)
     try {
-      const text = await file.text()
-      const parsed = parsePgn(text)
-      setGame(parsed)
-      setPgnText(text)
-      setPly(parsed.moves.length)
+      const text = await navigator.clipboard.readText()
+      if (!text.trim()) {
+        setError('Clipboard is empty.')
+        return
+      }
+      loadPgnText(text, (headers) => {
+        const { White, Black } = headers
+        if (White && Black) return `${White} vs ${Black}.pgn`
+        const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ')
+        return `Pasted ${stamp}.pgn`
+      })
     } catch {
-      setGame(null)
-      setError("Couldn't read that as a PGN game.")
+      setError("Couldn't read from clipboard. Check your browser's clipboard permissions.")
     }
-  }, [])
+  }, [loadPgnText])
 
   // On first mount, restore the most recently completed analysis (if any) so a
   // page reload doesn't force re-dropping the file and re-running the engine.
@@ -221,16 +250,29 @@ function AnalysisLayout() {
           <h1 className="dropzone__title">Drop your PGN</h1>
           <p className="dropzone__subtitle">Drag a game file anywhere on this board</p>
 
-          <button
-            type="button"
-            className="dropzone__browse"
-            onClick={(e) => {
-              e.stopPropagation()
-              inputRef.current?.click()
-            }}
-          >
-            Browse files
-          </button>
+          <div className="dropzone__actions">
+            <button
+              type="button"
+              className="dropzone__browse"
+              onClick={(e) => {
+                e.stopPropagation()
+                inputRef.current?.click()
+              }}
+            >
+              Browse files
+            </button>
+
+            <button
+              type="button"
+              className="dropzone__browse"
+              onClick={(e) => {
+                e.stopPropagation()
+                pasteFromClipboard()
+              }}
+            >
+              Paste from clipboard
+            </button>
+          </div>
 
           {error && <p className="dropzone__error">{error}</p>}
 
