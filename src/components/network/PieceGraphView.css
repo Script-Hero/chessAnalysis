@@ -1,0 +1,175 @@
+.piece-graph {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Same flat toggle as the board overlays: one mechanic for "which reading am
+   I looking at", used everywhere. */
+.piece-graph__filters {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.piece-graph__filter {
+  padding: 2px 0 4px;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--parchment-faint);
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.piece-graph__filter:hover {
+  color: var(--parchment);
+}
+
+.piece-graph__filter.is-active {
+  color: var(--brass-bright);
+  border-bottom-color: var(--brass-bright);
+}
+
+.piece-graph__svg {
+  width: 100%;
+  height: auto;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.035), transparent 68%),
+    rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--rule);
+}
+
+.piece-graph__edge {
+  stroke-width: 1.1;
+  transition: opacity 120ms ease;
+}
+
+.piece-graph__edge--defend {
+  stroke: rgba(127, 200, 158, 0.5);
+}
+
+.piece-graph__edge--attack {
+  stroke: rgba(232, 106, 106, 0.42);
+  stroke-dasharray: 3 2.5;
+}
+
+.piece-graph__edge.is-dim {
+  opacity: 0.12;
+}
+
+.piece-graph__node {
+  cursor: default;
+}
+
+.piece-graph__disc {
+  stroke-width: 1.2;
+  transition: opacity 120ms ease;
+}
+
+.piece-graph__node--white .piece-graph__disc {
+  fill: rgba(240, 232, 216, 0.92);
+  stroke: rgba(120, 100, 62, 0.9);
+}
+
+.piece-graph__node--black .piece-graph__disc {
+  fill: rgba(38, 42, 54, 0.95);
+  stroke: rgba(160, 178, 210, 0.75);
+}
+
+.piece-graph__node.is-dim .piece-graph__disc,
+.piece-graph__node.is-dim .piece-graph__glyph {
+  opacity: 0.2;
+}
+
+.piece-graph__node.is-hanging .piece-graph__disc {
+  stroke: rgba(224, 138, 74, 0.95);
+  stroke-width: 2.2;
+}
+
+.piece-graph__node.is-focus .piece-graph__disc {
+  stroke: var(--brass-bright);
+  stroke-width: 2.6;
+}
+
+.piece-graph__glyph {
+  text-anchor: middle;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.piece-graph__node--white .piece-graph__glyph {
+  fill: #2a2418;
+}
+
+.piece-graph__node--black .piece-graph__glyph {
+  fill: #dfe6f2;
+}
+
+.piece-graph__cut-ring {
+  fill: none;
+  stroke: rgba(232, 106, 106, 0.9);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.piece-graph__unheld-ring {
+  fill: none;
+  stroke: rgba(224, 138, 74, 0.85);
+  stroke-width: 1.6;
+}
+
+.piece-graph__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--parchment-faint);
+}
+
+.piece-graph__legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.piece-graph__key {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.piece-graph__key--defend {
+  background: rgba(127, 200, 158, 0.7);
+}
+
+.piece-graph__key--attack {
+  background: repeating-linear-gradient(90deg, rgba(232, 106, 106, 0.8) 0 3px, transparent 3px 5px);
+}
+
+.piece-graph__key--size {
+  background: radial-gradient(circle, rgba(240, 232, 216, 0.9) 40%, transparent 42%);
+}
+
+.piece-graph__key--cut {
+  border: 2px dashed rgba(232, 106, 106, 0.9);
+  background: transparent;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+}
+
+.piece-graph__key--unheld {
+  border: 2px solid rgba(224, 138, 74, 0.85);
+  background: transparent;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+}

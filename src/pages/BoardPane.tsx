@@ -4,12 +4,16 @@ import type { Arrow } from 'react-chessboard'
 import MoveBadge from '../components/MoveBadge'
 import { useAnalysis } from '../context/AnalysisContext'
 import { LAST_MOVE_HIGHLIGHT, SQUARE_DARK, SQUARE_LIGHT } from '../lib/boardTheme'
+import { OVERLAY_DESCRIPTION, OVERLAY_LABEL, overlayStyles } from '../lib/boardOverlay'
+import type { BoardOverlay } from '../context/AnalysisContext'
 import './BoardPane.css'
 
 // Three distinct hues (not three opacities of one hue) so overlapping
 // candidate-line arrows stay separable when two lines share squares — the
 // same problem PositionTree already solves with --brass-bright / --tree-alt.
 const ARROW_COLORS = ['rgba(232, 195, 117, 0.85)', 'rgba(127, 168, 232, 0.8)', 'rgba(139, 111, 224, 0.75)']
+
+const OVERLAYS: BoardOverlay[] = ['none', 'control', 'delta', 'load', 'cut', 'fragility']
 
 function BoardPane() {
   const {
@@ -20,9 +24,12 @@ function BoardPane() {
     orientation,
     setOrientation,
     judgments,
-    onReset,
     liveEngineEnabled,
     liveLines,
+    overlay,
+    setOverlay,
+    structure,
+    robustness,
   } = useAnalysis()
 
   const total = game.moves.length
@@ -43,13 +50,18 @@ function BoardPane() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ply, total])
 
+  // Structural shading sits underneath the last-move highlight: the overlay is
+  // context for the move, so it must never obscure which move was played.
   const squareStyles = useMemo(() => {
-    if (!currentMove) return {}
+    const previous = ply > 0 ? game.positions[ply - 1] : null
+    const base = overlayStyles(overlay, position, previous, structure, robustness)
+    if (!currentMove) return base
     return {
+      ...base,
       [currentMove.from]: { background: LAST_MOVE_HIGHLIGHT },
       [currentMove.to]: { background: LAST_MOVE_HIGHLIGHT },
     }
-  }, [currentMove])
+  }, [currentMove, overlay, position, structure, robustness, ply, game.positions])
 
   const pairs = useMemo(() => {
     const rows: { number: number; white?: { san: string; ply: number }; black?: { san: string; ply: number } }[] = []
@@ -75,12 +87,6 @@ function BoardPane() {
       )
       .filter((a): a is Arrow => a !== null)
   }, [liveEngineEnabled, liveLines])
-
-  const white = game.headers.White ?? 'White'
-  const black = game.headers.Black ?? 'Black'
-  const result = game.headers.Result
-  const event = game.headers.Event
-  const date = game.headers.Date
 
   return (
     <div className="board-pane">
@@ -148,14 +154,24 @@ function BoardPane() {
         </button>
       </div>
 
-      <div className="board-pane__header">
-        <p className="board-pane__players">
-          <span className={ply % 2 === 0 ? 'is-active' : ''}>{white}</span>
-          <span className="board-pane__vs">vs</span>
-          <span className={ply % 2 === 1 ? 'is-active' : ''}>{black}</span>
-        </p>
-        {(event || date) && <p className="board-pane__meta">{[event, date].filter(Boolean).join(' — ')}</p>}
-        {result && <p className="board-pane__result">{result}</p>}
+      {/* The overlay selector sits directly under the board, not behind a tab.
+          A structural claim is only checkable on the squares it is about, so
+          painting it is the app's primary reading of a position rather than an
+          option buried elsewhere. */}
+      <div className="board-pane__overlays">
+        <div className="board-pane__overlay-row" role="group" aria-label="Structural board overlay">
+          {OVERLAYS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`board-pane__overlay${overlay === value ? ' is-active' : ''}`}
+              onClick={() => setOverlay(value)}
+            >
+              {OVERLAY_LABEL[value]}
+            </button>
+          ))}
+        </div>
+        <p className="board-pane__overlay-desc">{OVERLAY_DESCRIPTION[overlay]}</p>
       </div>
 
       <ol className="board-pane__moves">
@@ -186,12 +202,7 @@ function BoardPane() {
         ))}
       </ol>
 
-      <div className="board-pane__footer">
-        <p className="board-pane__filename">{fileName}</p>
-        <button type="button" className="board-pane__reset" onClick={onReset}>
-          Load another game
-        </button>
-      </div>
+      <p className="board-pane__filename">{fileName}</p>
     </div>
   )
 }

@@ -1,0 +1,88 @@
+.percolation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.percolation__label {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--parchment-faint);
+}
+
+.percolation__svg {
+  width: 100%;
+  height: auto;
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid var(--rule);
+}
+
+.percolation__axis {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1;
+}
+
+.percolation__axis--faint {
+  stroke: rgba(255, 255, 255, 0.09);
+  stroke-dasharray: 3 3;
+}
+
+.percolation__band {
+  fill: rgba(232, 106, 106, 0.14);
+  stroke: none;
+}
+
+.percolation__curve {
+  fill: none;
+  stroke-width: 1.8;
+}
+
+.percolation__curve--random {
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-dasharray: 4 3;
+}
+
+.percolation__curve--targeted {
+  stroke: var(--status-critical);
+}
+
+.percolation__stats {
+  display: flex;
+  gap: 20px;
+  margin: 0;
+}
+
+.percolation__stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.percolation__stats dt {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--parchment-faint);
+}
+
+.percolation__stats dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--parchment);
+}
+
+.percolation__reading,
+.percolation__empty {
+  margin: 0;
+  font-family: var(--text);
+  font-size: var(--t-data);
+  line-height: 1.5;
+  color: var(--parchment-dim);
+  max-width: 52ch;
+}

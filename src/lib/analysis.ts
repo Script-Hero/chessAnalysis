@@ -122,24 +122,6 @@ export function computePhaseAccuracy(positions: string[], judgments: (MoveJudgme
   }
 }
 
-export type CriticalMoment = {
-  ply: number
-  san: string
-  mover: Side
-  judgment: MoveJudgment
-}
-
-const CRITICAL_CLASSIFICATIONS = new Set<MoveClassification>(['mistake', 'blunder'])
-
-export function findCriticalMoments(moves: ParsedMove[], judgments: (MoveJudgment | null)[]): CriticalMoment[] {
-  const moments: CriticalMoment[] = []
-  judgments.forEach((j, i) => {
-    if (!j || !CRITICAL_CLASSIFICATIONS.has(j.classification)) return
-    moments.push({ ply: i + 1, san: moves[i].san, mover: moverOf(i), judgment: j })
-  })
-  return moments
-}
-
 export function hasClockData(moves: ParsedMove[]): boolean {
   return moves.length > 0 && moves.every((m) => m.clockSeconds !== null)
 }

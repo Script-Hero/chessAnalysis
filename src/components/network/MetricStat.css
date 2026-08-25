@@ -1,0 +1,98 @@
+.metric-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 0 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.metric-stat__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* `display: contents` so the InfoNote's expanded body becomes a flex item of
+   the head and can take a full-width row of its own. Inherited properties
+   (colour, size, casing) still reach the label text through it; only the box
+   disappears. Without this the explanation is trapped in the label column and
+   renders as a two-word-wide ribbon. */
+.metric-stat__label {
+  display: contents;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--parchment-faint);
+}
+
+.metric-stat .info-note__body {
+  flex-basis: 100%;
+}
+
+.metric-stat__value {
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--parchment);
+}
+
+.metric-stat__bar {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(232, 106, 106, 0.22),
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(127, 200, 158, 0.22)
+  );
+}
+
+.metric-stat__baseline {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.metric-stat__marker {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--brass-bright);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
+.metric-stat--good .metric-stat__marker {
+  background: var(--status-good);
+}
+
+.metric-stat--poor .metric-stat__marker {
+  background: var(--status-critical);
+}
+
+.metric-stat__reading {
+  margin: 0;
+  font-family: var(--text);
+  font-size: var(--t-data);
+  line-height: 1.45;
+  color: var(--parchment-dim);
+}
+
+.metric-stat__z {
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  color: var(--parchment-faint);
+  font-variant-numeric: tabular-nums;
+}
+

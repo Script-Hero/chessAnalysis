@@ -3,9 +3,9 @@ import EvalChart from '../components/explore/EvalChart'
 import LiveEnginePanel from '../components/explore/LiveEnginePanel'
 import GameTree from '../components/explore/GameTree'
 import CandidateLines from '../components/explore/CandidateLines'
+import GraphShape from '../components/explore/GraphShape'
 import { buildGameTreeRows, DEFAULT_BRANCH_PLIES, DEFAULT_BRANCH_THRESHOLD } from '../lib/tree'
 import type { BranchThreshold, CollapseThreshold } from '../lib/tree'
-import { computePlyMetrics } from '../lib/graphMetrics'
 import { useAnalysis } from '../context/AnalysisContext'
 import './ExploreTab.css'
 
@@ -35,6 +35,7 @@ function ExploreTab() {
     evals,
     judgments,
     lines,
+    decisions,
     liveEngineEnabled,
     setLiveEngineEnabled,
     liveLines,
@@ -51,13 +52,8 @@ function ExploreTab() {
     return buildGameTreeRows(game.positions, game.moves, judgments, lines, DEFAULT_BRANCH_PLIES, branchThreshold)
   }, [game, judgments, lines, branchThreshold])
 
-  const metrics = useMemo(() => {
-    if (!judgments || !lines) return null
-    return computePlyMetrics(game, judgments, lines)
-  }, [game, judgments, lines])
-
   const currentLines = lines?.[ply] ?? null
-  const currentMetric = metrics?.[ply] ?? null
+  const currentDecision = decisions?.[ply] ?? null
 
   return (
     <div className="explore-tab">
@@ -152,15 +148,18 @@ function ExploreTab() {
               </div>
             </div>
 
-            {treeRows ? (
-              <GameTree rows={treeRows} currentPly={ply} onSelectPly={goTo} collapseThreshold={collapseThreshold} />
+            {treeRows && lines ? (
+              <>
+                <GraphShape positions={game.positions} lines={lines} currentPly={ply} onSelectPly={goTo} />
+                <GameTree rows={treeRows} currentPly={ply} onSelectPly={goTo} collapseThreshold={collapseThreshold} />
+              </>
             ) : (
               <p className="explore-tab__pending-text">Waiting for engine analysis…</p>
             )}
           </section>
         )}
 
-        {subTab === 'lines' && <CandidateLines metric={currentMetric} fen={position} lines={currentLines} />}
+        {subTab === 'lines' && <CandidateLines decision={currentDecision} fen={position} lines={currentLines} />}
       </div>
     </div>
   )

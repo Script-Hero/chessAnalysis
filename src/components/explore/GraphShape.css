@@ -1,0 +1,84 @@
+.graph-shape {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border-top: 1px solid var(--rule);
+  padding: 16px 0 4px;
+}
+
+.graph-shape__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .graph-shape__stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.graph-shape__stats dt {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--parchment-faint);
+  margin-bottom: 4px;
+}
+
+.graph-shape__stats dd {
+  margin: 0;
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-size: 24px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--parchment);
+}
+
+.graph-shape__current h5 {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--parchment-faint);
+  margin: 0 0 8px;
+}
+
+.graph-shape__current ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--text);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  color: var(--parchment-dim);
+  max-width: 68ch;
+}
+
+.graph-shape__note {
+  font-family: var(--text);
+  font-style: italic;
+  font-size: var(--t-data);
+  color: var(--parchment-faint);
+}
+
+.graph-shape__joins button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--brass-bright);
+  cursor: pointer;
+}
+
+.graph-shape__joins button:hover {
+  text-decoration: underline;
+}

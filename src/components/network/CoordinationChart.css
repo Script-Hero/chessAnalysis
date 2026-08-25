@@ -1,0 +1,49 @@
+.coordination-chart {
+  border: 1px solid rgba(201, 162, 75, 0.14);
+  background: rgba(236, 226, 206, 0.02);
+}
+
+.coordination-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 900 / 150;
+  cursor: crosshair;
+}
+
+.coordination-chart__axis {
+  stroke: rgba(201, 162, 75, 0.3);
+}
+
+.coordination-chart__tick {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--parchment-dim);
+}
+
+.coordination-chart__line {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.coordination-chart__line--white {
+  stroke: var(--white-accent);
+}
+
+.coordination-chart__line--black {
+  stroke: var(--black-accent);
+}
+
+.coordination-chart__cursor {
+  stroke: var(--brass-bright);
+  stroke-width: 1.5;
+  opacity: 0.95;
+  stroke-width: 1;
+}
+
+.coordination-chart__caption {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--parchment-dim);
+  padding: 8px 12px 10px;
+}

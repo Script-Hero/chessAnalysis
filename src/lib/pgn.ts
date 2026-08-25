@@ -4,6 +4,8 @@ export type ParsedMove = {
   san: string
   from: string
   to: string
+  /** Promotion piece letter ('q', 'r', 'b', 'n'), when this move promotes. */
+  promotion: string | null
   /** Clock remaining after this move, in seconds. Null if the PGN has no [%clk] data. */
   clockSeconds: number | null
 }
@@ -100,7 +102,13 @@ export function parsePgn(pgn: string): ParsedGame {
   verboseHistory.forEach((move, i) => {
     replay.move({ from: move.from, to: move.to, promotion: move.promotion })
     positions.push(replay.fen())
-    moves.push({ san: move.san, from: move.from, to: move.to, clockSeconds: clocks[i] })
+    moves.push({
+      san: move.san,
+      from: move.from,
+      to: move.to,
+      promotion: move.promotion ?? null,
+      clockSeconds: clocks[i],
+    })
   })
 
   if (moves.length === 0) {

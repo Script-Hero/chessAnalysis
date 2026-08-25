@@ -1,66 +1,147 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
 import BoardPane from './BoardPane'
 import OverviewTab from './OverviewTab'
 import ExploreTab from './ExploreTab'
+import StructureTab from './StructureTab'
+import LibraryTab from './LibraryTab'
 import { parsePgn } from '../lib/pgn'
 import type { ParsedGame } from '../lib/pgn'
 import { analyzeGame, LiveEngine } from '../lib/stockfish'
-import type { EngineLine, MoveJudgment, PositionEval } from '../lib/stockfish'
-import { clearAnalysisCache, loadAnalysisCache, saveAnalysisCache } from '../lib/cache'
+import type { EngineLine, MoveJudgment, PositionEval, SurveyPosition } from '../lib/stockfish'
+import { computeDecisionNodes } from '../lib/moveGraph'
+import { computeCorridor, findNarrowingEpisodes } from '../lib/corridor'
+import { analyzeRobustness, analyzeStructure } from '../lib/structure'
+import { analyzeTemporal } from '../lib/temporal'
+import { explainEpisodes, structureSeries } from '../lib/causes'
+import { buildGameChain } from '../lib/markov'
+import { scoreWinProb } from '../lib/winprob'
+import {
+  clearLastOpenedId,
+  deleteGame,
+  gameId,
+  getLastOpenedId,
+  listGames,
+  loadAnalysis,
+  saveAnalysis,
+  saveGameMeta,
+  setLastOpenedId,
+} from '../lib/library'
+import type { GameMeta } from '../lib/library'
 import { AnalysisContext } from '../context/AnalysisContext'
-import type { AnalysisContextValue, DashboardTab, MoveFilter } from '../context/AnalysisContext'
+import type { AnalysisContextValue, BoardOverlay, DashboardTab, MoveFilter } from '../context/AnalysisContext'
 import './AnalysisLayout.css'
 
 const LIVE_DEPTH = 20
+
+const TABS: { value: DashboardTab; label: string }[] = [
+  { value: 'overview', label: 'Corridor' },
+  { value: 'structure', label: 'Structure' },
+  { value: 'explore', label: 'Explore' },
+  { value: 'library', label: 'Library' },
+]
 
 function AnalysisLayout() {
   const [isDragging, setIsDragging] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
   const [game, setGame] = useState<ParsedGame | null>(null)
-  const [pgnText, setPgnText] = useState<string | null>(null)
+  const [gameKey, setGameKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const dragDepth = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
-  const skipNextAnalysisRef = useRef(false)
 
   const [ply, setPly] = useState(0)
   const [orientation, setOrientation] = useState<'white' | 'black'>('white')
   const [evals, setEvals] = useState<PositionEval[] | null>(null)
   const [judgments, setJudgments] = useState<(MoveJudgment | null)[] | null>(null)
   const [lines, setLines] = useState<EngineLine[][] | null>(null)
+  const [survey, setSurvey] = useState<SurveyPosition[] | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [liveEngineEnabled, setLiveEngineEnabled] = useState(false)
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
   const [moveFilter, setMoveFilter] = useState<MoveFilter>('both')
+  const [overlay, setOverlay] = useState<BoardOverlay>('none')
+  const [library, setLibrary] = useState<GameMeta[]>([])
   const liveEngineRef = useRef<LiveEngine | null>(null)
   const [liveLines, setLiveLines] = useState<EngineLine[]>([])
   const [liveDepth, setLiveDepth] = useState(0)
 
+  // Set when a game is opened from the library with an analysis already stored,
+  // so the analysis effect knows not to re-run the engine over it.
+  const analysisPreloadedRef = useRef(false)
+
+  const refreshLibrary = useCallback(async () => {
+    try {
+      setLibrary(await listGames())
+    } catch {
+      // A blocked or unavailable IndexedDB costs the library, not the session.
+    }
+  }, [])
+
+  const clearAnalysisState = useCallback(() => {
+    setEvals(null)
+    setJudgments(null)
+    setLines(null)
+    setSurvey(null)
+    setAnalysisError(null)
+  }, [])
+
   const loadPgnText = useCallback(
-    (text: string, nameHint: string | ((headers: Record<string, string>) => string)) => {
+    async (text: string, nameHint: string | ((headers: Record<string, string>) => string)) => {
       setError(null)
+      let parsed: ParsedGame
       try {
-        const parsed = parsePgn(text)
-        setFileName(typeof nameHint === 'function' ? nameHint(parsed.headers) : nameHint)
-        setGame(parsed)
-        setPgnText(text)
-        setPly(parsed.moves.length)
+        parsed = parsePgn(text)
       } catch {
         setGame(null)
         setError("Couldn't read that as a PGN game.")
+        return
       }
+
+      const id = gameId(text)
+      const name = typeof nameHint === 'function' ? nameHint(parsed.headers) : nameHint
+
+      // The stored analysis is looked up *before* the game is put on screen.
+      // Setting the game first would let the analysis effect fire against a
+      // still-unresolved lookup and re-run the engine over a game already
+      // analysed — minutes of work to recompute what was on disk.
+      const stored = await loadAnalysis(id).catch(() => null)
+
+      analysisPreloadedRef.current = stored !== null
+      clearAnalysisState()
+      if (stored) {
+        setEvals(stored.evals)
+        setJudgments(stored.judgments)
+        setLines(stored.lines)
+        setSurvey(stored.survey)
+      }
+      setFileName(name)
+      setGame(parsed)
+      setGameKey(id)
+      setPly(parsed.moves.length)
+      setLastOpenedId(id)
+
+      const meta: GameMeta = {
+        id,
+        fileName: name,
+        pgn: text,
+        headers: parsed.headers,
+        savedAt: Date.now(),
+        analyzed: stored !== null,
+      }
+      saveGameMeta(meta)
+        .then(refreshLibrary)
+        .catch(() => undefined)
     },
-    [],
+    [clearAnalysisState, refreshLibrary],
   )
 
   const acceptFile = useCallback(
     async (file: File | undefined) => {
       if (!file) return
-      const text = await file.text()
-      loadPgnText(text, file.name)
+      loadPgnText(await file.text(), file.name)
     },
     [loadPgnText],
   )
@@ -84,40 +165,83 @@ function AnalysisLayout() {
     }
   }, [loadPgnText])
 
-  // On first mount, restore the most recently completed analysis (if any) so a
-  // page reload doesn't force re-dropping the file and re-running the engine.
+  const openGame = useCallback(
+    (id: string) => {
+      const meta = library.find((g) => g.id === id)
+      if (!meta) return
+      loadPgnText(meta.pgn, meta.fileName)
+      setActiveTab('overview')
+    },
+    [library, loadPgnText],
+  )
+
+  const removeGame = useCallback(
+    (id: string) => {
+      deleteGame(id)
+        .then(refreshLibrary)
+        .catch(() => undefined)
+      if (id === gameKey) {
+        setGame(null)
+        setGameKey(null)
+        setFileName(null)
+        clearAnalysisState()
+      }
+    },
+    [gameKey, refreshLibrary, clearAnalysisState],
+  )
+
+  // On first mount, restore the last game opened, along with its analysis.
   useEffect(() => {
-    const cached = loadAnalysisCache()
-    if (!cached) return
-    try {
-      const parsed = parsePgn(cached.pgn)
-      skipNextAnalysisRef.current = true
-      setPgnText(cached.pgn)
-      setFileName(cached.fileName)
+    let cancelled = false
+    ;(async () => {
+      const games = await listGames().catch(() => [])
+      if (cancelled) return
+      setLibrary(games)
+
+      const lastId = getLastOpenedId()
+      const meta = lastId ? games.find((g) => g.id === lastId) : undefined
+      if (!meta) return
+
+      let parsed: ParsedGame
+      try {
+        parsed = parsePgn(meta.pgn)
+      } catch {
+        return
+      }
+
+      // Same ordering rule as loadPgnText: resolve the stored analysis before
+      // the game reaches state, so the analysis effect sees a settled answer.
+      const stored = await loadAnalysis(meta.id).catch(() => null)
+      if (cancelled) return
+
+      analysisPreloadedRef.current = stored !== null
+      if (stored) {
+        setEvals(stored.evals)
+        setJudgments(stored.judgments)
+        setLines(stored.lines)
+        setSurvey(stored.survey)
+      }
+      setFileName(meta.fileName)
       setGame(parsed)
+      setGameKey(meta.id)
       setPly(parsed.moves.length)
-      setEvals(cached.evals)
-      setJudgments(cached.judgments)
-      setLines(cached.lines)
-    } catch {
-      clearAnalysisCache()
+    })()
+    return () => {
+      cancelled = true
     }
   }, [])
 
-  // Analysis runs automatically as soon as a game loads — no button to click.
+  // Analysis runs automatically as soon as a game without a stored analysis loads.
   useEffect(() => {
-    if (!game) return
-    if (skipNextAnalysisRef.current) {
-      skipNextAnalysisRef.current = false
+    if (!game || !gameKey) return
+    if (analysisPreloadedRef.current) {
+      analysisPreloadedRef.current = false
       return
     }
     let cancelled = false
 
     setAnalyzing(true)
     setAnalysisError(null)
-    setEvals(null)
-    setJudgments(null)
-    setLines(null)
     setProgress({ done: 0, total: game.positions.length })
 
     analyzeGame(game.positions, (done, total) => {
@@ -128,6 +252,14 @@ function AnalysisLayout() {
         setEvals(result.evals)
         setJudgments(result.judgments)
         setLines(result.lines)
+        setSurvey(result.survey)
+        return saveAnalysis({
+          id: gameKey,
+          evals: result.evals,
+          judgments: result.judgments,
+          lines: result.lines,
+          survey: result.survey,
+        }).then(refreshLibrary)
       })
       .catch(() => {
         if (!cancelled) setAnalysisError("Couldn't run the engine analysis.")
@@ -139,18 +271,62 @@ function AnalysisLayout() {
     return () => {
       cancelled = true
     }
-  }, [game])
+  }, [game, gameKey, refreshLibrary])
 
-  // Persist the finished analysis so it survives a page reload.
-  useEffect(() => {
-    if (!game || !pgnText || !fileName || !evals || !judgments || !lines) return
-    saveAnalysisCache({ fileName, pgn: pgnText, evals, judgments, lines })
-  }, [game, pgnText, fileName, evals, judgments, lines])
+  const decisions = useMemo(() => {
+    if (!game || !survey) return null
+    return computeDecisionNodes(game, survey)
+  }, [game, survey])
+
+  const corridor = useMemo(() => (decisions ? computeCorridor(decisions) : null), [decisions])
 
   const position = game?.positions[ply]
 
-  // Live engine: a persistent worker that re-queries whenever the toggle is on
-  // and the position changes, streaming candidate lines as depth increases.
+  // Structure is recomputed per viewed position rather than for the whole game:
+  // it is cheap for one position and quadratic-ish in pieces, and only the
+  // position on the board is ever displayed.
+  const structure = useMemo(() => {
+    if (!position) return null
+    try {
+      return analyzeStructure(position)
+    } catch {
+      return null
+    }
+  }, [position])
+
+  // Percolation rebuilds the incidence graph a few hundred times, so it is the
+  // one measure computed on demand — when the panel that shows it is open, or
+  // when the overlay that paints it is selected.
+  const wantsRobustness = activeTab === 'structure' || overlay === 'fragility'
+  const robustness = useMemo(() => {
+    if (!position || !wantsRobustness) return null
+    try {
+      return analyzeRobustness(position)
+    } catch {
+      return null
+    }
+  }, [position, wantsRobustness])
+
+  // The temporal network and the per-ply structural digest are properties of
+  // the whole game, so they are keyed on the game rather than on the ply.
+  const temporal = useMemo(() => (game ? analyzeTemporal(game.positions) : null), [game])
+  const digests = useMemo(() => (game ? structureSeries(game.positions) : null), [game])
+
+  const explanations = useMemo(() => {
+    if (!corridor || !digests || !temporal) return null
+    return explainEpisodes(findNarrowingEpisodes(corridor), digests, temporal)
+  }, [corridor, digests, temporal])
+
+  const chains = useMemo(() => {
+    if (!decisions || !survey || !evals || evals.length === 0) return null
+    const final = evals[evals.length - 1]
+    const terminal = scoreWinProb(final.score, final.mateIn)
+    return {
+      white: buildGameChain(decisions, survey, terminal, 'white'),
+      black: buildGameChain(decisions, survey, terminal, 'black'),
+    }
+  }, [decisions, survey, evals])
+
   useEffect(() => {
     if (!liveEngineEnabled || !position) {
       liveEngineRef.current?.stop()
@@ -161,8 +337,8 @@ function AnalysisLayout() {
     if (!liveEngineRef.current) liveEngineRef.current = new LiveEngine(3)
     setLiveLines([])
     setLiveDepth(0)
-    liveEngineRef.current.go(position, LIVE_DEPTH, (lines, depth) => {
-      setLiveLines(lines)
+    liveEngineRef.current.go(position, LIVE_DEPTH, (nextLines, depth) => {
+      setLiveLines(nextLines)
       setLiveDepth(depth)
     })
   }, [liveEngineEnabled, position])
@@ -175,16 +351,14 @@ function AnalysisLayout() {
   }, [])
 
   const reset = () => {
-    clearAnalysisCache()
+    clearLastOpenedId()
     setGame(null)
+    setGameKey(null)
     setFileName(null)
-    setPgnText(null)
     setError(null)
-    setEvals(null)
-    setJudgments(null)
-    setLines(null)
-    setAnalysisError(null)
+    clearAnalysisState()
     setLiveEngineEnabled(false)
+    setOverlay('none')
     setPly(0)
     setOrientation('white')
     setMoveFilter('both')
@@ -249,8 +423,11 @@ function AnalysisLayout() {
             ♞
           </span>
 
-          <h1 className="dropzone__title">Drop your PGN</h1>
-          <p className="dropzone__subtitle">Drag a game file anywhere on this board</p>
+          <h1 className="dropzone__title">Postmortem</h1>
+          <p className="dropzone__subtitle">
+            Drop a PGN anywhere on this page. What comes back is the stretch where the position stopped offering
+            choices, and the thing that closed them.
+          </p>
 
           <div className="dropzone__actions">
             <button
@@ -276,6 +453,31 @@ function AnalysisLayout() {
             </button>
           </div>
 
+          {library.length > 0 && (
+            <div className="dropzone__library">
+              <p className="dropzone__library-title">Or pick up where you left off</p>
+              <ul className="dropzone__library-list">
+                {library.slice(0, 5).map((meta) => (
+                  <li key={meta.id}>
+                    <button
+                      type="button"
+                      className="dropzone__library-item"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        loadPgnText(meta.pgn, meta.fileName)
+                      }}
+                    >
+                      <span>
+                        {meta.headers.White ?? '?'} — {meta.headers.Black ?? '?'}
+                      </span>
+                      {!meta.analyzed && <span className="dropzone__library-flag">unanalysed</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {error && <p className="dropzone__error">{error}</p>}
 
           <input
@@ -293,6 +495,7 @@ function AnalysisLayout() {
   const contextValue: AnalysisContextValue = {
     game,
     fileName,
+    gameKey,
     ply,
     goTo,
     orientation,
@@ -300,6 +503,17 @@ function AnalysisLayout() {
     evals,
     judgments,
     lines,
+    survey,
+    decisions,
+    corridor,
+    structure,
+    robustness,
+    temporal,
+    digests,
+    explanations,
+    chains,
+    overlay,
+    setOverlay,
     analyzing,
     progress,
     analysisError,
@@ -312,23 +526,45 @@ function AnalysisLayout() {
     setActiveTab,
     moveFilter,
     setMoveFilter,
+    library,
+    openGame,
+    removeGame,
   }
 
   return (
     <div className="page-analysis page-analysis--app">
       <div className="board-glow" aria-hidden="true" />
 
-      <nav className="analysis-nav">
+      {/* The game is the title of the page. It used to sit fourth down the left
+          column, under the board and the overlay pills, while this bar held
+          nothing but a spinner. */}
+      <header className="gamebar">
+        <div className="gamebar__game">
+          <h1 className="gamebar__players">
+            <span className={ply % 2 === 0 ? 'is-to-move' : ''}>{game.headers.White ?? 'White'}</span>
+            <span className="gamebar__against">against</span>
+            <span className={ply % 2 === 1 ? 'is-to-move' : ''}>{game.headers.Black ?? 'Black'}</span>
+          </h1>
+          <p className="gamebar__meta">
+            {[game.headers.Event, game.headers.Date].filter(Boolean).join(' · ')}
+            {game.headers.Result && <span className="gamebar__result">{game.headers.Result}</span>}
+          </p>
+        </div>
+
         <div className="analysis-nav__status">
           {analyzing && (
             <span className="analysis-nav__progress">
               <span className="spinner" aria-hidden="true" />
-              Analyzing… {progress.done}/{progress.total}
+              {progress.done} of {progress.total} positions
+              <span className="analysis-nav__hint">deep eval, then a full-width survey of every legal move</span>
             </span>
           )}
           {analysisError && <span className="analysis-nav__error">{analysisError}</span>}
+          <button type="button" className="gamebar__reset" onClick={reset}>
+            Open another
+          </button>
         </div>
-      </nav>
+      </header>
 
       <AnalysisContext.Provider value={contextValue}>
         <div className="analysis-split">
@@ -338,20 +574,16 @@ function AnalysisLayout() {
 
           <div className="analysis-split__dashboard">
             <div className="dashboard-tabs">
-              <button
-                type="button"
-                className={`dashboard-tabs__tab${activeTab === 'overview' ? ' is-active' : ''}`}
-                onClick={() => setActiveTab('overview')}
-              >
-                Overview
-              </button>
-              <button
-                type="button"
-                className={`dashboard-tabs__tab${activeTab === 'explore' ? ' is-active' : ''}`}
-                onClick={() => setActiveTab('explore')}
-              >
-                Explore
-              </button>
+              {TABS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={`dashboard-tabs__tab${activeTab === value ? ' is-active' : ''}`}
+                  onClick={() => setActiveTab(value)}
+                >
+                  {label}
+                </button>
+              ))}
 
               {activeTab === 'overview' && (
                 <div className="move-filter" role="group" aria-label="Filter graphs by mover">
@@ -376,7 +608,10 @@ function AnalysisLayout() {
             </div>
 
             <div className="dashboard-tabs__content">
-              {activeTab === 'overview' ? <OverviewTab /> : <ExploreTab />}
+              {activeTab === 'overview' && <OverviewTab />}
+              {activeTab === 'structure' && <StructureTab />}
+              {activeTab === 'explore' && <ExploreTab />}
+              {activeTab === 'library' && <LibraryTab />}
             </div>
           </div>
         </div>

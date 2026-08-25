@@ -1,4 +1,5 @@
 import { Chess } from 'chess.js'
+import { scoreWinProb } from './winprob'
 
 export type PositionEval = {
   /** Evaluation in pawns, from White's perspective. Saturated for mate scores. */
@@ -33,6 +34,8 @@ export type GameAnalysis = {
   judgments: (MoveJudgment | null)[]
   /** Up to `multiPv` candidate lines per position, one entry per position. */
   lines: EngineLine[][]
+  /** Full-width shallow scores for every legal move, one entry per position. */
+  survey: SurveyPosition[]
 }
 
 const ENGINE_URL = '/stockfish/stockfish-18-lite-single.js'
@@ -49,6 +52,40 @@ export type EngineLine = {
   move: string | null
   /** Full principal variation, in UCI form. */
   pv: string[]
+}
+
+/**
+ * One legal move's shallow score, from the full-width survey pass.
+ *
+ * Unlike `EngineLine`, this carries no PV — the survey exists to describe the
+ * *shape* of the decision (how many moves were playable, where the played move
+ * ranked among all of them), not to supply variations, and dropping the PV
+ * keeps a whole game's survey small enough to persist.
+ */
+export type MoveScore = {
+  /** UCI form, including any promotion suffix — matched exactly, never by prefix. */
+  uci: string
+  san: string
+  /** Pawns, from the mover's perspective. */
+  score: number
+  mateIn: number | null
+  /** Win% for the mover if this move is played. */
+  winProb: number
+  /** Win% given up versus the best legal move. 0 for the best move itself. */
+  lossPct: number
+}
+
+/**
+ * Every legal move in one position, scored at `SURVEY_DEPTH`, best first.
+ *
+ * `legalCount` is the true legal-move count from the rules, which can exceed
+ * `moves.length` if the engine reports fewer lines than requested; metrics use
+ * `moves.length` as their denominator so a truncated survey never silently
+ * inflates a branching figure.
+ */
+export type SurveyPosition = {
+  legalCount: number
+  moves: MoveScore[]
 }
 
 /** Parses one `info ... multipv N score ... pv ...` UCI line, if it is one. */
@@ -98,13 +135,9 @@ export function sanLineFromUci(fen: string, uciMoves: string[], maxPlies = 5): s
   return sans.join(' ')
 }
 
-function cpToWinProb(cp: number): number {
-  return 100 / (1 + Math.pow(10, -cp / 400))
-}
-
+/** Win% held by a line, from the perspective of the side to move in the analyzed position. */
 function lineWinProb(line: EngineLine): number {
-  if (line.mateIn !== null) return line.mateIn > 0 ? 100 : 0
-  return cpToWinProb(line.score * 100)
+  return scoreWinProb(line.score, line.mateIn)
 }
 
 function toWhiteRelative(fen: string, line: EngineLine): PositionEval {
@@ -160,8 +193,10 @@ function classify(adjustedLossPct: number, rawLossPct: number): MoveClassificati
 class StockfishEngine {
   private worker: Worker
   private ready: Promise<void>
+  private currentMultiPv: number
 
   constructor(multiPv: number) {
+    this.currentMultiPv = multiPv
     this.worker = new Worker(ENGINE_URL)
     this.ready = new Promise((resolve) => {
       const onMessage = (e: MessageEvent<string>) => {
@@ -178,8 +213,21 @@ class StockfishEngine {
     })
   }
 
+  /**
+   * The survey pass needs a different MultiPV for every position (one line per
+   * legal move), so MultiPV can't stay a construction-time constant. Skipping
+   * the `setoption` when the value is unchanged avoids a needless engine
+   * round-trip on the common case of two consecutive same-width positions.
+   */
+  private setMultiPv(multiPv: number) {
+    if (multiPv === this.currentMultiPv) return
+    this.worker.postMessage(`setoption name MultiPV value ${multiPv}`)
+    this.currentMultiPv = multiPv
+  }
+
   async searchLines(fen: string, depth: number, multiPv: number): Promise<EngineLine[]> {
     await this.ready
+    this.setMultiPv(multiPv)
 
     return new Promise((resolve) => {
       const lines = new Map<number, EngineLine>()
@@ -213,21 +261,99 @@ class StockfishEngine {
 
 export const ANALYSIS_DEPTH = 12
 
+/**
+ * Depth for the full-width pass that scores every legal move.
+ *
+ * Shallower than `ANALYSIS_DEPTH` on purpose: this pass runs with MultiPV equal
+ * to the legal-move count, which disables most of the alpha-beta cutoffs that
+ * make deep search affordable. Depth 8 is enough to separate playable moves
+ * from losing ones — which is all the decision-shape metrics need — while
+ * keeping a full game's analysis to roughly twice the old runtime.
+ */
+export const SURVEY_DEPTH = 8
+
+/**
+ * Ceiling on survey width. Legal-move counts above this are vanishingly rare
+ * (and always come from wide-open winning positions where the exact count adds
+ * nothing), so capping bounds the worst-case search cost.
+ */
+const MAX_SURVEY_WIDTH = 64
+
+/** Every legal move in `fen`, as UCI + SAN pairs. */
+function legalMovesOf(fen: string): { uci: string; san: string }[] {
+  try {
+    const chess = new Chess(fen)
+    return chess.moves({ verbose: true }).map((m) => ({
+      uci: m.from + m.to + (m.promotion ?? ''),
+      san: m.san,
+    }))
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Joins the survey pass's engine lines back to the legal move list.
+ *
+ * Engine lines are keyed by their full UCI first move (promotion suffix
+ * included) rather than by a from+to prefix: prefix matching silently collapses
+ * the four promotion choices onto whichever one the engine happened to report
+ * first, which is exactly the kind of position where the choice matters.
+ */
+function buildSurvey(fen: string, lines: EngineLine[]): SurveyPosition {
+  const legal = legalMovesOf(fen)
+  const sanByUci = new Map(legal.map((m) => [m.uci, m.san]))
+
+  const scored = lines
+    .filter((line) => line.move !== null && sanByUci.has(line.move))
+    .map((line) => ({
+      uci: line.move!,
+      san: sanByUci.get(line.move!)!,
+      score: line.score,
+      mateIn: line.mateIn,
+      winProb: lineWinProb(line),
+    }))
+    .sort((a, b) => b.winProb - a.winProb)
+
+  const bestWinProb = scored.length ? scored[0].winProb : 0
+  return {
+    legalCount: legal.length,
+    moves: scored.map((m) => ({ ...m, lossPct: bestWinProb - m.winProb })),
+  }
+}
+
 export async function analyzeGame(
   positions: string[],
   onProgress: (done: number, total: number) => void,
   depth = ANALYSIS_DEPTH,
   multiPv = 3,
+  surveyDepth = SURVEY_DEPTH,
 ): Promise<GameAnalysis> {
   const engine = new StockfishEngine(multiPv)
   try {
     const perPosition: EngineLine[][] = []
     const evals: PositionEval[] = []
+    const survey: SurveyPosition[] = []
 
+    // Both passes run per position rather than as two sweeps over the game, so
+    // the second search reuses the transposition table the first just filled,
+    // and progress stays monotone instead of restarting halfway through.
     for (let i = 0; i < positions.length; i++) {
       const lines = await engine.searchLines(positions[i], depth, multiPv)
       perPosition.push(lines)
       evals.push(toWhiteRelative(positions[i], lines[0] ?? { score: 0, mateIn: null, move: null, pv: [] }))
+
+      // The final position has no played move to describe, so its survey would
+      // never be read — skipping it saves the most expensive search in the game.
+      const isFinal = i === positions.length - 1
+      const width = isFinal ? 0 : Math.min(legalMovesOf(positions[i]).length, MAX_SURVEY_WIDTH)
+      if (width > 0) {
+        const wide = await engine.searchLines(positions[i], surveyDepth, width)
+        survey.push(buildSurvey(positions[i], wide))
+      } else {
+        survey.push({ legalCount: 0, moves: [] })
+      }
+
       onProgress(i + 1, positions.length)
     }
 
@@ -260,7 +386,7 @@ export async function analyzeGame(
       }
     })
 
-    return { evals, judgments, lines: perPosition }
+    return { evals, judgments, lines: perPosition, survey }
   } finally {
     engine.terminate()
   }

@@ -1,0 +1,91 @@
+.leverage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leverage__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  counter-reset: leverage;
+}
+
+.leverage__row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 5.5rem 1fr 3rem;
+  grid-template-areas:
+    'move bar value'
+    'move detail detail';
+  align-items: center;
+  gap: 3px 12px;
+  padding: 8px 4px;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.leverage__row:hover {
+  background: var(--wash);
+}
+
+/* The move on the board is marked in the margin, matching the library list. */
+.leverage__row.is-current {
+  box-shadow: inset 2px 0 0 var(--brass-bright);
+}
+
+.leverage__move {
+  grid-area: move;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-data);
+  color: var(--parchment);
+}
+
+.leverage__bar {
+  grid-area: bar;
+  height: 6px;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.leverage__fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(232, 195, 117, 0.55), #e8c375);
+}
+
+.leverage__value {
+  grid-area: value;
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-data);
+  color: var(--brass-bright);
+}
+
+.leverage__detail {
+  grid-area: detail;
+  font-family: var(--text);
+  font-size: var(--t-data);
+  color: var(--parchment-faint);
+}
+
+.leverage__note,
+.leverage__empty {
+  margin: 0;
+  font-family: var(--text);
+  font-size: var(--t-data);
+  line-height: 1.55;
+  color: var(--parchment-faint);
+  max-width: 64ch;
+}

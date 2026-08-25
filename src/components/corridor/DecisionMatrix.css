@@ -1,0 +1,128 @@
+.decision-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.decision-matrix__grid {
+  display: grid;
+  grid-template-columns: 92px repeat(3, 1fr);
+  gap: 4px;
+  align-items: stretch;
+}
+
+.decision-matrix__col-head,
+.decision-matrix__row-head {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  display: flex;
+  align-items: center;
+}
+
+.decision-matrix__col-head {
+  justify-content: center;
+  text-align: center;
+  padding-bottom: 2px;
+}
+
+.decision-matrix__row-head {
+  justify-content: space-between;
+  padding-right: 8px;
+  gap: 6px;
+}
+
+.decision-matrix__row-n {
+  color: var(--parchment);
+  opacity: 0.5;
+}
+
+.decision-matrix__cell {
+  border: 1px solid rgba(201, 162, 75, 0.16);
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  font-family: var(--mono);
+  color: var(--parchment);
+  transition: border-color 120ms ease;
+}
+
+.decision-matrix__cell:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.decision-matrix__cell:not(:disabled):hover,
+.decision-matrix__cell.is-selected {
+  border-color: var(--brass-bright);
+}
+
+.decision-matrix__count {
+  font-size: 18px;
+}
+
+.decision-matrix__share {
+  font-size: 10px;
+  color: var(--parchment-dim);
+}
+
+.decision-matrix__caption,
+.decision-matrix__empty {
+  font-family: var(--text);
+  font-size: var(--t-data);
+  line-height: 1.55;
+  color: var(--parchment-faint);
+  max-width: 62ch;
+}
+
+.decision-matrix__drill {
+  border-top: 1px solid rgba(201, 162, 75, 0.14);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.decision-matrix__drill-head {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--parchment);
+}
+
+.decision-matrix__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.decision-matrix__chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid rgba(201, 162, 75, 0.22);
+  background: transparent;
+  color: var(--parchment);
+  cursor: pointer;
+}
+
+.decision-matrix__chip--white {
+  border-left: 2px solid var(--white-accent);
+}
+
+.decision-matrix__chip--black {
+  border-left: 2px solid var(--black-accent);
+}
+
+.decision-matrix__chip:hover,
+.decision-matrix__chip.is-current {
+  border-color: var(--brass-bright);
+  background: rgba(232, 195, 117, 0.08);
+}

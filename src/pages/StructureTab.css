@@ -1,0 +1,234 @@
+.structure {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding-top: 6px;
+}
+
+.structure__section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Same voice as the corridor tab: headings are sentences, set in the display
+   face at reading size. */
+.structure__heading {
+  margin: 0;
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-size: var(--t-lede);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--parchment);
+  max-width: 42ch;
+}
+
+.structure__sub {
+  margin: 14px 0 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--parchment-faint);
+}
+
+.structure__lede {
+  margin: 0;
+  font-family: var(--text);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  color: var(--parchment-dim);
+  max-width: 64ch;
+}
+
+.structure__empty,
+.structure__none {
+  margin: 0;
+  font-family: var(--text);
+  font-style: italic;
+  font-size: var(--t-data);
+  color: var(--parchment-faint);
+}
+
+/* ── The two sides ─────────────────────────────────────────────────────────
+   A comparison, so they're columns divided by a rule rather than two rounded
+   cards floating on a tinted wash. */
+
+.structure__sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px clamp(24px, 4vw, 44px);
+}
+
+.structure__side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 12px;
+  border-top: 2px solid var(--rule);
+}
+
+.structure__side:nth-child(2) {
+  border-top-color: var(--black-accent);
+}
+
+.structure__side:first-child {
+  border-top-color: var(--white-accent);
+}
+
+.structure__side-name {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.structure__side-name--white {
+  color: var(--white-accent);
+}
+
+.structure__side-name--black {
+  color: var(--black-accent);
+}
+
+.structure__flow-head {
+  margin: 0;
+  font-family: var(--text);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  color: var(--parchment-dim);
+}
+
+.structure__flow-head strong {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--parchment);
+}
+
+.structure__deficit {
+  color: var(--status-critical);
+}
+
+/* Rows that name squares are measurements: mono, so the coordinates line up
+   column-wise down the list. */
+.structure__list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  line-height: 1.55;
+  color: var(--parchment-dim);
+}
+
+/* Except these, which are sentences. */
+.structure__list--prose {
+  font-family: var(--text);
+  font-size: var(--t-data);
+  line-height: 1.55;
+  gap: 8px;
+}
+
+.structure__list--prose li {
+  padding-left: 12px;
+  border-left: 2px solid rgba(232, 106, 106, 0.5);
+}
+
+.structure__list em {
+  color: var(--parchment-faint);
+  font-style: normal;
+}
+
+.structure__square {
+  display: inline-block;
+  min-width: 3.2em;
+  margin-right: 0.5em;
+  font-variant-numeric: tabular-nums;
+  color: var(--brass-bright);
+}
+
+.structure__metrics {
+  display: grid;
+  gap: 10px;
+}
+
+.structure__king {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--rule);
+}
+
+.structure__king div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 10px;
+}
+
+.structure__king dt {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--parchment-faint);
+}
+
+.structure__king dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--parchment);
+}
+
+.structure__percolation {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+/* Three figures with captions. Display face on the number, prose on the
+   caption — the caption is a sentence fragment, not a label code. */
+.structure__temporal-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px clamp(24px, 5vw, 56px);
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+
+.structure__temporal-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 22ch;
+}
+
+.structure__stat-value {
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-size: 28px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--parchment);
+}
+
+.structure__stat-label {
+  font-family: var(--text);
+  font-size: var(--t-data);
+  line-height: 1.4;
+  color: var(--parchment-faint);
+}

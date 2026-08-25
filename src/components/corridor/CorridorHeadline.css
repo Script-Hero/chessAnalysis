@@ -1,0 +1,125 @@
+/* The two sides read as one comparison, not two cards. A shared top rule per
+   side carries the identity colour; a hairline down the middle does the
+   separating that four borders used to do. */
+.corridor-headline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 clamp(24px, 4vw, 48px);
+}
+
+@media (max-width: 720px) {
+  .corridor-headline {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+.corridor-headline__card {
+  padding: 14px 0 4px;
+  border-top: 2px solid;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.corridor-headline__card--white {
+  border-top-color: var(--white-accent);
+}
+
+.corridor-headline__card--black {
+  border-top-color: var(--black-accent);
+}
+
+@media (min-width: 721px) {
+  .corridor-headline__card--black {
+    padding-left: clamp(24px, 4vw, 48px);
+    margin-left: calc(-1 * clamp(24px, 4vw, 48px));
+    border-left: 1px solid var(--rule);
+  }
+}
+
+.corridor-headline__name {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--parchment-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.corridor-headline__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.corridor-headline__value {
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-size: var(--t-figure);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--parchment);
+}
+
+.corridor-headline__label {
+  font-family: var(--text);
+  font-size: var(--t-data);
+  line-height: 1.4;
+  color: var(--parchment-dim);
+  max-width: 34ch;
+}
+
+/* The within-game comparison. Italic because it's a judgement, not a reading. */
+.corridor-headline__ref {
+  font-family: var(--text);
+  font-style: italic;
+  font-size: var(--t-data);
+  line-height: 1.4;
+  color: var(--brass);
+  min-height: 1.4em;
+  max-width: 36ch;
+}
+
+.corridor-headline__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+  margin: 0;
+}
+
+.corridor-headline__grid dt {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.06em;
+  color: var(--parchment-faint);
+  margin-bottom: 3px;
+}
+
+.corridor-headline__grid dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-data);
+  color: var(--parchment);
+}
+
+.corridor-headline__chain {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--text);
+  font-size: var(--t-data);
+  line-height: 1.5;
+  color: var(--parchment-dim);
+}
+
+.corridor-headline__chain strong {
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--brass-bright);
+}

@@ -3,6 +3,7 @@
   --ink-2: #17130f;
   --parchment: #ece2ce;
   --parchment-dim: #b8ac93;
+  --parchment-faint: #8d836f;
   --brass: #c9a24b;
   --brass-bright: #e8c375;
   --board-line: rgba(236, 226, 206, 0.05);
@@ -23,13 +24,35 @@
   --tier-inaccuracy-warm: #e08a2e;
   --tier-mistake-warm: #c65a3a;
 
+  /* Three type roles, and nothing outside them.
+     display — section headings, figures, the game's own name
+     text    — every sentence meant to be read
+     mono    — notation, measurements, chrome, anything tabular */
   --display: 'Fraunces', 'Iowan Old Style', serif;
+  --text: 'Newsreader', 'Iowan Old Style', Georgia, serif;
   --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  /* One scale. A size that isn't here doesn't belong on the page. */
+  --t-micro: 10px;
+  --t-label: 11px;
+  --t-data: 13px;
+  --t-body: 15px;
+  --t-lede: 17px;
+  --t-head: 20px;
+  --t-figure: 34px;
+  --t-title: 42px;
+
+  /* Rules, not boxes. Weight carries meaning: hairline separates, strong
+     encloses, and only the board and the two side cards earn an enclosure. */
+  --rule: rgba(201, 162, 75, 0.15);
+  --rule-strong: rgba(201, 162, 75, 0.32);
+  --panel: rgba(23, 19, 15, 0.55);
+  --wash: rgba(232, 195, 117, 0.06);
 
   color-scheme: dark;
   color: var(--parchment);
   background: var(--ink);
-  font: 16px/1.5 var(--mono);
+  font: var(--t-body)/1.62 var(--text);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -53,6 +76,24 @@ body {
   background: var(--ink);
 }
 
+/* Controls inherit the page's voice unless they say otherwise; browsers
+   default them to 13px Arial, which is how a stray sans-serif gets in. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Figures line up in columns wherever they're stacked or compared. */
+.tnum,
+.overview__stat-n,
+.corridor-headline__value {
+  font-variant-numeric: tabular-nums;
+}
+
 .spinner {
   display: inline-block;
   width: 12px;
@@ -67,5 +108,15 @@ body {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

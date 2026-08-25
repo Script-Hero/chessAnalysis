@@ -1,29 +1,23 @@
 import { useMemo } from 'react'
+import InfoNote from '../components/InfoNote'
 import PlayerSummary from '../components/overview/PlayerSummary'
 import PhaseAccuracy from '../components/overview/PhaseAccuracy'
-import CriticalMoments from '../components/overview/CriticalMoments'
 import MaterialChart from '../components/overview/MaterialChart'
 import TimePressureChart from '../components/overview/TimePressureChart'
-import GraphScatter from '../components/overview/GraphScatter'
-import GraphTimeline from '../components/overview/GraphTimeline'
-import GraphInsights from '../components/overview/GraphInsights'
+import CorridorChart from '../components/corridor/CorridorChart'
+import CorridorHeadline from '../components/corridor/CorridorHeadline'
+import CutMoments from '../components/corridor/CutMoments'
+import DecisionMatrix from '../components/corridor/DecisionMatrix'
+import LeverageList from '../components/corridor/LeverageList'
 import { useAnalysis } from '../context/AnalysisContext'
-import { computeAccuracy, computePhaseAccuracy, findCriticalMoments, hasClockData } from '../lib/analysis'
-import { computePlyMetrics, BUCKET_INFO } from '../lib/graphMetrics'
-import type { MoveBucket } from '../lib/graphMetrics'
+import { computeAccuracy, computePhaseAccuracy, hasClockData } from '../lib/analysis'
+import type { Side } from '../lib/analysis'
+import { findCutMoments } from '../lib/corridor'
+import { SURVEY_UNCERTAINTY_PCT } from '../lib/moveGraph'
 import './OverviewTab.css'
 
-const LEGEND_BUCKETS: MoveBucket[] = [
-  'precise',
-  'near-tie',
-  'drift',
-  'blunder-forced',
-  'blunder-open',
-  'forced',
-]
-
 function OverviewTab() {
-  const { game, ply, goTo, judgments, evals, lines, setActiveTab, moveFilter } = useAnalysis()
+  const { game, ply, goTo, judgments, evals, decisions, corridor, moveFilter, explanations, chains } = useAnalysis()
 
   const white = game.headers.White ?? 'White'
   const black = game.headers.Black ?? 'Black'
@@ -33,121 +27,172 @@ function OverviewTab() {
     () => (judgments ? computePhaseAccuracy(game.positions, judgments) : null),
     [game.positions, judgments],
   )
-  const criticalMoments = useMemo(
-    () => (judgments ? findCriticalMoments(game.moves, judgments) : []),
-    [game.moves, judgments],
-  )
   const showClock = useMemo(() => hasClockData(game.moves), [game.moves])
 
-  const metrics = useMemo(() => {
-    if (!judgments || !lines) return null
-    return computePlyMetrics(game, judgments, lines)
-  }, [game, judgments, lines])
+  const filteredPoints = useMemo(() => {
+    if (!corridor) return null
+    return moveFilter === 'both' ? corridor : corridor.filter((p) => p.mover === moveFilter)
+  }, [corridor, moveFilter])
 
-  const filteredMetrics = useMemo(() => {
-    if (!metrics) return null
-    if (moveFilter === 'both') return metrics
-    return metrics.filter((m) => m.mover === moveFilter)
-  }, [metrics, moveFilter])
+  const filteredDecisions = useMemo(() => {
+    if (!decisions) return null
+    return moveFilter === 'both' ? decisions : decisions.filter((d) => d.mover === moveFilter)
+  }, [decisions, moveFilter])
 
-  const jumpToBoard = (targetPly: number) => {
-    goTo(targetPly)
-    setActiveTab('explore')
-  }
+  const cuts = useMemo(() => (decisions ? findCutMoments(decisions) : []), [decisions])
 
-  if (!evals || !judgments || !accuracy || !phaseAccuracy || !metrics || !filteredMetrics) {
+  if (!evals || !judgments || !accuracy || !phaseAccuracy || !decisions || !corridor || !filteredPoints || !filteredDecisions) {
     return (
       <div className="overview">
         <div className="overview__pending">
           <span className="spinner" aria-hidden="true" />
-          Waiting on engine analysis…
+          The engine is still working through the game.
         </div>
       </div>
     )
   }
 
-  const rated = metrics.filter((m) => m.entropy !== null)
-  const counts = rated.reduce(
-    (acc, m) => {
-      acc[m.bucket] = (acc[m.bucket] ?? 0) + 1
-      return acc
-    },
-    {} as Partial<Record<MoveBucket, number>>,
+  const visibleExplanations = (explanations ?? []).filter(
+    (e) => moveFilter === 'both' || e.episode.mover === moveFilter,
   )
+  const visibleEpisodes = visibleExplanations.map((e) => e.episode)
+  const visibleCuts = moveFilter === 'both' ? cuts : cuts.filter((c) => c.mover === moveFilter)
+
+  const leverageSides: Side[] =
+    moveFilter === 'both' ? ['white', 'black'] : [moveFilter as Side]
 
   return (
     <div className="overview">
-      <PlayerSummary white={white} black={black} accuracy={accuracy} />
+      <CorridorHeadline decisions={decisions} whiteLabel={white} blackLabel={black} chains={chains} />
 
-      <section className="overview__section">
-        <h3 className="overview__heading">Move quality vs. how open the position was</h3>
-        <GraphScatter metrics={filteredMetrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
-        <div className="overview__legend">
-          {LEGEND_BUCKETS.map((bucket) => (
-            <span key={bucket} className="overview__legend-item">
-              <span className="overview__legend-dot" style={{ background: `var(${BUCKET_INFO[bucket].colorVar})` }} />
-              {BUCKET_INFO[bucket].label}
-            </span>
-          ))}
-          <span className="overview__legend-item">
-            <span className="overview__legend-dot overview__legend-dot--mover" style={{ borderColor: 'var(--white-accent)' }} />
-            White to move
-          </span>
-          <span className="overview__legend-item">
-            <span className="overview__legend-dot overview__legend-dot--mover" style={{ borderColor: 'var(--black-accent)' }} />
-            Black to move
-          </span>
-        </div>
-        <GraphTimeline metrics={filteredMetrics} selectedIndex={null} onSelect={(index) => jumpToBoard(index)} />
-      </section>
-
-      <section className="overview__section">
-        <div className="overview__stat-row">
-          <div className="overview__stat overview__stat--caution">
-            <span className="overview__stat-n">{counts['blunder-forced'] ?? 0}</span>
-            <span className="overview__stat-label">should've been found</span>
-          </div>
-          <div className="overview__stat overview__stat--neutral">
-            <span className="overview__stat-n">{counts['blunder-open'] ?? 0}</span>
-            <span className="overview__stat-label">genuinely hard misses</span>
-          </div>
-          <div className="overview__stat overview__stat--caution">
-            <span className="overview__stat-n">{counts['drift'] ?? 0}</span>
-            <span className="overview__stat-label">silent drift, untagged</span>
-          </div>
-          <div className="overview__stat overview__stat--good">
-            <span className="overview__stat-n">{counts['precise'] ?? 0}</span>
-            <span className="overview__stat-label">precise, needle found</span>
-          </div>
-        </div>
-      </section>
-
-      <div className="overview__grid">
-        <PhaseAccuracy white={white} black={black} phases={phaseAccuracy} />
-        <MaterialChart positions={game.positions} currentPly={ply} onSelectPly={jumpToBoard} />
-      </div>
-
-      {showClock && (
-        <TimePressureChart
-          moves={game.moves}
-          judgments={judgments}
-          timeControl={game.headers.TimeControl}
-          currentPly={ply}
-          onSelectPly={jumpToBoard}
-        />
+      {/* The explanations come before the chart. The chart shows that options
+          collapsed; only this section says why, and the why is the deliverable. */}
+      {visibleExplanations.length > 0 && (
+        <section className="overview__section">
+          <h3 className="overview__heading overview__heading--lead">
+            Where the position closed, and what closed it
+            <InfoNote label="how causes are attributed">
+              Each run is a stretch over which one side's options only ever narrowed. The sentence after it names the
+              structural event that accounts for it — a defence that ran short, control collapsing onto one piece, the
+              network being rebuilt — located by ply and ranked against the game's own baseline rather than against a
+              fixed threshold.
+            </InfoNote>
+          </h3>
+          <ul className="overview__explanations">
+            {visibleExplanations.map((explanation) => (
+              <li
+                key={`${explanation.episode.mover}-${explanation.episode.startPly}`}
+                className={explanation.episode.collapsed ? 'is-collapsed' : ''}
+              >
+                <button type="button" onClick={() => goTo(explanation.episode.startPly - 1)}>
+                  <span
+                    className={`overview__episode-mover overview__episode-mover--${explanation.episode.mover}`}
+                  >
+                    {explanation.episode.mover === 'white' ? white : black}
+                  </span>
+                  <span className="overview__explanation-text">{explanation.summary}</span>
+                </button>
+                {explanation.findings.length > 2 && (
+                  <ul className="overview__findings">
+                    {explanation.findings.slice(2).map((finding, i) => (
+                      <li key={`${finding.kind}-${i}`}>{finding.text}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <section className="overview__section">
-        <h3 className="overview__heading">Signals</h3>
-        <GraphInsights metrics={metrics} whiteLabel={white} blackLabel={black} />
+        <h3 className="overview__heading">
+          How many real choices each position offered
+          <InfoNote label="how width is measured">
+            Width is the perplexity of a softmax over every legal move's win% loss — how many moves genuinely competed,
+            not how many cleared a cutoff. A move on the boundary contributes a fraction of a choice rather than
+            flipping a whole one, which matters because the survey runs shallow enough that a hard count would be
+            reporting search noise; the hard count is carried in the tooltips with the band it spans when the tolerance
+            moves by ±{SURVEY_UNCERTAINTY_PCT} win%. Shaded spans mark sustained narrowing, and the thin blue trace is
+            the evaluation.
+          </InfoNote>
+        </h3>
+        <CorridorChart
+          points={filteredPoints}
+          decisions={filteredDecisions}
+          episodes={visibleEpisodes}
+          evals={evals}
+          currentPly={ply}
+          onSelect={goTo}
+        />
       </section>
 
-      <CriticalMoments
-        moments={criticalMoments}
-        positions={game.positions}
-        currentPly={ply}
-        onJump={(momentPly) => jumpToBoard(momentPly - 1)}
-      />
+      <section className="overview__section">
+        <h3 className="overview__heading">
+          What was worth fixing
+          <InfoNote label="how decisions are ranked">
+            The game is solved as an absorbing Markov chain: states are the positions it occupied, transitions are a
+            softmax over move quality, and every move not played absorbs at its own evaluation. Each number is what the
+            move gained or lost against what a player of this strength would have averaged in the same position, so
+            both sides' terms sum exactly to the swing the game actually took. A blunder in an already-decided position
+            ranks below a small slip in one still worth playing.
+          </InfoNote>
+        </h3>
+        <div className="overview__leverage">
+          {chains ? (
+            leverageSides.map((side) => (
+              <div key={side} className="overview__leverage-side">
+                <h4 className={`overview__leverage-name overview__leverage-name--${side}`}>
+                  {side === 'white' ? white : black}
+                </h4>
+                <LeverageList
+                  chain={chains[side]}
+                  label={side === 'white' ? white : black}
+                  currentPly={ply}
+                  onSelect={goTo}
+                />
+              </div>
+            ))
+          ) : (
+            <p className="overview__lede">No chain was solved for this game.</p>
+          )}
+        </div>
+      </section>
+
+      <section className="overview__section">
+        <h3 className="overview__heading">Only-move tests</h3>
+        <CutMoments moments={visibleCuts} currentPly={ply} onSelect={goTo} whiteLabel={white} blackLabel={black} />
+      </section>
+
+      <section className="overview__section">
+        <h3 className="overview__heading">Room offered, and what was done with it</h3>
+        <DecisionMatrix decisions={filteredDecisions} currentPly={ply} onSelect={goTo} />
+      </section>
+
+      {/* Accuracy, phase splits, material and clock are commodity readouts every
+          analysis site already provides. They are kept because they are cheap
+          and occasionally wanted, and folded away because leaving them in the
+          main flow diluted the one thing this app does that others don't. */}
+      <details className="overview__standard">
+        <summary>The usual numbers</summary>
+        <div className="overview__standard-body">
+          <PlayerSummary white={white} black={black} accuracy={accuracy} />
+          <div className="overview__grid">
+            <PhaseAccuracy white={white} black={black} phases={phaseAccuracy} />
+            <MaterialChart positions={game.positions} currentPly={ply} onSelectPly={goTo} />
+          </div>
+          {showClock && (
+            <TimePressureChart
+              moves={game.moves}
+              judgments={judgments}
+              timeControl={game.headers.TimeControl}
+              currentPly={ply}
+              onSelectPly={goTo}
+            />
+          )}
+        </div>
+      </details>
+
     </div>
   )
 }

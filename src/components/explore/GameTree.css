@@ -57,6 +57,7 @@
 
 .game-tree__branch-label {
   fill: var(--status-good);
+  font-family: var(--mono);
   font-size: 10px;
 }
 

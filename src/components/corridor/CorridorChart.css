@@ -1,0 +1,109 @@
+.corridor-chart {
+  border: 1px solid rgba(201, 162, 75, 0.14);
+  background: rgba(236, 226, 206, 0.02);
+  padding: 4px 0 0;
+}
+
+.corridor-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 900 / 280;
+}
+
+.corridor-chart__grid {
+  stroke: rgba(236, 226, 206, 0.14);
+  stroke-dasharray: 2 4;
+}
+
+.corridor-chart__axis {
+  stroke: rgba(201, 162, 75, 0.4);
+}
+
+.corridor-chart__tick,
+.corridor-chart__side-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--parchment-dim);
+  opacity: 0.7;
+}
+
+.corridor-chart__bar {
+  cursor: pointer;
+  transition: opacity 100ms ease;
+}
+
+.corridor-chart__bar:hover {
+  opacity: 1;
+}
+
+.corridor-chart__bar.is-current {
+  stroke: var(--brass-bright);
+  stroke-width: 1;
+}
+
+.corridor-chart__cut {
+  fill: var(--brass-bright);
+  cursor: pointer;
+}
+
+.corridor-chart__exit {
+  fill: var(--status-critical);
+}
+
+.corridor-chart__eval {
+  fill: none;
+  stroke: rgba(127, 168, 232, 0.88);
+  stroke-width: 1.7;
+}
+
+.corridor-chart__cursor {
+  stroke: var(--brass-bright);
+  stroke-width: 1.5;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.corridor-chart__episode {
+  fill: rgba(232, 195, 117, 0.19);
+}
+
+.corridor-chart__episode.is-collapsed {
+  fill: rgba(208, 59, 59, 0.3);
+}
+
+.corridor-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 10px 12px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  color: var(--parchment-dim);
+}
+
+.corridor-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.corridor-chart__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.corridor-chart__swatch--cut {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brass-bright);
+}
+
+.corridor-chart__swatch--eval {
+  height: 2px;
+  background: rgba(127, 168, 232, 0.7);
+}

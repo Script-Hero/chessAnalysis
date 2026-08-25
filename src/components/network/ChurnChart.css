@@ -1,0 +1,36 @@
+.churn-chart {
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+}
+
+.churn-chart__axis {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+}
+
+.churn-chart__bar {
+  fill: rgba(127, 168, 232, 0.35);
+  transition: fill 120ms ease;
+}
+
+.churn-chart__bar:hover {
+  fill: rgba(127, 168, 232, 0.7);
+}
+
+/* Change points get the only saturated colour in the chart: they are the
+   readable signal, and the ordinary bars are the baseline they stand against. */
+.churn-chart__bar.is-change {
+  fill: #e8c375;
+}
+
+.churn-chart__bar.is-current {
+  fill: #fff;
+}
+
+.churn-chart__tick {
+  fill: rgba(255, 255, 255, 0.4);
+  font-family: var(--mono);
+  font-size: 9px;
+  text-anchor: end;
+}
