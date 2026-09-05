@@ -312,28 +312,3 @@
 .overview__leverage-name--black {
   color: var(--black-accent);
 }
-
-/* Commodity readouts, folded away rather than deleted: cheap to keep, and
-   leaving them in the main flow diluted what this tab is for. */
-.overview__standard > summary {
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: var(--t-micro);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--parchment-faint);
-  padding: 12px 0;
-  border-top: 1px solid var(--rule);
-  transition: color 140ms ease;
-}
-
-.overview__standard > summary:hover {
-  color: var(--brass-bright);
-}
-
-.overview__standard-body {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  padding-top: 16px;
-}

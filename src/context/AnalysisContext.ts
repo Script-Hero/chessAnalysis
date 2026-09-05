@@ -10,7 +10,12 @@ import type { GameChain } from '../lib/markov'
 import type { Side } from '../lib/analysis'
 import type { GameMeta } from '../lib/library'
 
-export type DashboardTab = 'overview' | 'structure' | 'explore' | 'library'
+/**
+ * The dashboard is a three-step reading of one game, in the order a postmortem
+ * actually goes: what happened, which moves decided it, then one move at a
+ * time. The library is filing rather than a step, so it sits outside the run.
+ */
+export type DashboardTab = 'report' | 'moments' | 'move' | 'library'
 export type MoveFilter = 'white' | 'black' | 'both'
 
 /**
@@ -42,6 +47,13 @@ export type AnalysisContextValue = {
   structure: PositionStructure | null
   /** Percolation curves for the position on screen; null while they compute. */
   robustness: Robustness | null
+  /**
+   * Set while the structural reading is on screen. Percolation is the one
+   * measure expensive enough to compute on demand, and it used to be gated on a
+   * top-level tab; now that the reading is a panel inside step three, the panel
+   * itself declares when it is mounted.
+   */
+  setStructureOpen: (open: boolean) => void
   /** The game read as one temporal network. */
   temporal: TemporalSeries | null
   /** Cheap structural reading of every ply, used to explain the corridor. */

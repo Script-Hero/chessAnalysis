@@ -67,8 +67,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
-  padding: 16px clamp(20px, 4vw, 56px) 14px;
+  gap: clamp(18px, 3vw, 40px);
+  padding: 12px clamp(20px, 4vw, 56px);
   border-bottom: 1px solid var(--rule-strong);
   background: rgba(15, 13, 10, 0.9);
   backdrop-filter: blur(10px);
@@ -423,7 +423,7 @@
   gap: clamp(28px, 4vw, 56px);
   width: 100%;
   margin: 0 auto;
-  padding: 28px clamp(20px, 4vw, 56px);
+  padding: 16px clamp(20px, 4vw, 56px) 18px;
   align-items: stretch;
   flex: 1;
   min-height: 0;
@@ -473,8 +473,28 @@
   flex-shrink: 0;
 }
 
+/* In the masthead the bar needs no rule of its own — it sits down on the one
+   the masthead already draws, so the active step's underline lands on it. */
+@media (min-width: 861px) {
+  .gamebar .dashboard-tabs {
+    border-bottom: none;
+    margin-bottom: -12px;
+    flex: 0 1 auto;
+    min-width: 0;
+    gap: clamp(16px, 2vw, 26px);
+  }
+
+  .gamebar .dashboard-tabs__spacer {
+    flex: 0 0 auto;
+    min-width: 10px;
+  }
+}
+
 .dashboard-tabs__tab {
   position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
   font-family: var(--mono);
   font-size: var(--t-label);
   font-weight: 500;
@@ -486,6 +506,46 @@
   padding: 0 0 10px;
   border: none;
   transition: color 160ms ease;
+}
+
+/* The numeral is the answer to "where do I start". It is set heavier and
+   larger than the word beside it so the run reads as an order at a glance,
+   before any of the labels are read. */
+.dashboard-tabs__step {
+  font-size: var(--t-body);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--parchment-faint);
+  opacity: 0.55;
+  transition:
+    color 160ms ease,
+    opacity 160ms ease;
+}
+
+.dashboard-tabs__tab:hover .dashboard-tabs__step {
+  opacity: 0.85;
+}
+
+.dashboard-tabs__tab.is-active .dashboard-tabs__step {
+  color: var(--brass-bright);
+  opacity: 1;
+}
+
+/* Pushes everything after it — the mover filter, the library — to the far end,
+   so the numbered run is never crowded by controls that aren't part of it. */
+.dashboard-tabs__spacer {
+  flex: 1 1 auto;
+  min-width: 12px;
+}
+
+/* Outside the run: filing, not a step. Ruled off and set smaller so it never
+   competes with 01. */
+.dashboard-tabs__tab--aside {
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  padding-left: 22px;
+  border-left: 1px solid var(--rule);
+  align-self: stretch;
 }
 
 .dashboard-tabs__tab::after {
@@ -553,6 +613,16 @@
     gap: 18px;
   }
 
+  .dashboard-tabs__spacer {
+    display: none;
+  }
+
+  .dashboard-tabs__tab--aside {
+    padding-left: 0;
+    border-left: none;
+    margin-left: auto;
+  }
+
   .move-filter {
     margin-left: 0;
     width: 100%;
@@ -581,4 +651,139 @@
 .gamebar__reset:focus-visible {
   outline: 1px solid var(--brass-bright);
   outline-offset: 3px;
+}
+
+
+/* ── Step chrome ───────────────────────────────────────────────────────────
+   Shared by the three step tabs. Each one opens by saying which step it is and
+   what question it answers, and closes by naming the next step: the workflow
+   is stated in the page rather than left to be inferred from the tab bar. */
+
+.step-lede {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.step-lede__eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+.step-lede__title {
+  margin: 0;
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: italic;
+  font-size: var(--t-head);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--parchment);
+}
+
+.step-lede__text {
+  margin: 2px 0 0;
+  font-family: var(--text);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  color: var(--parchment-dim);
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+/* The forward link. It sits at the foot of a step because that is where a
+   reader who has finished one is looking. */
+.step-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+}
+
+.step-next__text {
+  margin: 0;
+  font-family: var(--text);
+  font-style: italic;
+  font-size: var(--t-data);
+  color: var(--parchment-faint);
+  max-width: 52ch;
+}
+
+.step-next__button {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass-bright);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  padding: 9px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.step-next__button:hover:not(:disabled) {
+  border-color: var(--brass-bright);
+  background: rgba(201, 162, 75, 0.08);
+}
+
+.step-next__button:disabled {
+  color: var(--parchment-faint);
+  cursor: default;
+  opacity: 0.5;
+}
+
+.step-next__button:focus-visible {
+  outline: 1px solid var(--brass-bright);
+  outline-offset: 3px;
+}
+
+/* Step two's hand-off: which move is on the board right now, and the way into
+   step three with it. */
+.step-handoff {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--brass);
+  background: rgba(236, 226, 206, 0.02);
+}
+
+.step-handoff__move {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--text);
+  font-size: var(--t-body);
+  color: var(--parchment-dim);
+}
+
+.step-handoff__move strong {
+  font-family: var(--mono);
+  font-size: var(--t-lede);
+  color: var(--parchment);
+}
+
+.step-handoff__move--empty {
+  font-style: italic;
+  color: var(--parchment-faint);
 }

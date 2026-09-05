@@ -1,0 +1,132 @@
+/* Step one has to fit in one view.
+ *
+ * A reader asking "how did this game go" is asking one question, and answering
+ * it by scrolling means holding half the answer in memory while looking at the
+ * other half. So the report is sized to the pane rather than to its contents:
+ * the lead card keeps its full width at the top, the four readouts sit two up
+ * underneath, and the charts take whatever height is left over instead of a
+ * fixed 140px each.
+ *
+ * Nothing is added, removed or reordered to do it. `display: contents` on the
+ * two sections is what makes that possible — the sections stay in the markup as
+ * the grouping they are, and their children place themselves on one grid.
+ */
+
+.overview--report {
+  gap: 10px;
+  padding-top: 0;
+}
+
+/* Below the split's breakpoint the pane scrolls with the page, so the column
+   layout and the height fitting both come off. */
+@media (min-width: 861px) {
+  /* The scroll container's bottom padding is there to keep a scrolling tab
+     clear of the pane edge; a tab that fits exactly must not inherit it. */
+  .dashboard-tabs__content:has(> .overview--report) {
+    padding-bottom: 0;
+  }
+
+  .overview--report {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* lead · the two full-width plots · the pair of side readouts · hand-off.
+       The three elastic rows take a min-content floor so that a pane too short
+       for the report scrolls rather than letting one card grow over the next;
+       every card below bounds its own min-content, or an SVG's aspect ratio
+       would set that floor instead. */
+    grid-template-rows: auto minmax(min-content, 1fr) minmax(min-content, 1fr) minmax(min-content, 1fr) auto;
+  }
+
+  .overview--report > .overview__section {
+    display: contents;
+  }
+
+  /* The two plots that read left-to-right across the whole game get the whole
+     width, one under the other; the two compact readouts share the last row.
+     Placed explicitly because the markup order — summary, phases, eval,
+     material, clock — is the order the sections are grouped in, not the order
+     they are read on a wide pane. */
+  .overview--report .player-summary {
+    grid-area: 1 / 1 / 2 / -1;
+  }
+
+  .overview--report .eval-chart {
+    grid-area: 2 / 1 / 3 / -1;
+  }
+
+  .overview--report .material-chart {
+    grid-area: 3 / 1 / 4 / -1;
+  }
+
+  .overview--report .phase-accuracy {
+    grid-area: 4 / 1 / 5 / 2;
+  }
+
+  .overview--report .time-chart {
+    grid-area: 4 / 2 / 5 / -1;
+  }
+
+  .overview--report .step-next {
+    grid-area: 5 / 1 / 6 / -1;
+  }
+
+  /* Without clock data the phase table has the last row to itself. */
+  .overview--report:not(:has(.time-chart)) .phase-accuracy {
+    grid-column: 1 / -1;
+  }
+
+  .overview--report .step-next {
+    margin-top: 0;
+    padding-top: 8px;
+  }
+
+  .overview--report .step-next__button {
+    padding: 7px 14px;
+  }
+
+  /* ── Cards that take the height they are given ─────────────────────────
+     Each chart card becomes a column whose plot is the elastic part; the
+     SVGs already scale with preserveAspectRatio="none", so the only thing
+     needed is for the height to stop being a constant. */
+
+  .overview--report .eval-chart,
+  .overview--report .material-chart,
+  .overview--report .time-chart,
+  .overview--report .phase-accuracy {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .overview--report .eval-chart__chart {
+    flex: 1 1 0;
+  }
+
+  /* The floor under the fitting: the shortest plot still worth reading. It is
+     set on the flex child rather than the card so that it — and not the SVG's
+     640×140 aspect ratio — is what the card reports as its min-content. */
+  .overview--report .eval-chart__chart,
+  .overview--report .material-chart__svg,
+  .overview--report .time-chart__svg {
+    min-height: 48px;
+  }
+
+  .overview--report .eval-chart__svg {
+    height: 100%;
+  }
+
+  .overview--report .material-chart__svg,
+  .overview--report .time-chart__svg {
+    flex: 1 1 0;
+    height: auto;
+  }
+
+  /* The phase table has no plot to stretch, so its rows share the slack
+     instead — the card fills its cell rather than sitting in a pool of it. */
+  .overview--report .phase-accuracy__row {
+    flex: 1;
+    min-height: 26px;
+  }
+}

@@ -1,4 +1,4 @@
-import { useAnalysis } from '../context/AnalysisContext'
+import { useAnalysis } from '../../context/AnalysisContext'
 import './LibraryTab.css'
 
 /**
