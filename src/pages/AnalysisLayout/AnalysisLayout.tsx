@@ -1,21 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
-import BoardPane from './BoardPane'
-import OverviewTab from './OverviewTab'
-import ExploreTab from './ExploreTab'
-import StructureTab from './StructureTab'
-import LibraryTab from './LibraryTab'
-import { parsePgn } from '../lib/pgn'
-import type { ParsedGame } from '../lib/pgn'
-import { analyzeGame, LiveEngine } from '../lib/stockfish'
-import type { EngineLine, MoveJudgment, PositionEval, SurveyPosition } from '../lib/stockfish'
-import { computeDecisionNodes } from '../lib/moveGraph'
-import { computeCorridor, findNarrowingEpisodes } from '../lib/corridor'
-import { analyzeRobustness, analyzeStructure } from '../lib/structure'
-import { analyzeTemporal } from '../lib/temporal'
-import { explainEpisodes, structureSeries } from '../lib/causes'
-import { buildGameChain } from '../lib/markov'
-import { scoreWinProb } from '../lib/winprob'
+import BoardPane from '../BoardPane/BoardPane'
+import ReportTab from '../ReportTab/ReportTab'
+import MomentsTab from '../MomentsTab/MomentsTab'
+import MoveTab from '../MoveTab/MoveTab'
+import LibraryTab from '../LibraryTab/LibraryTab'
+import { parsePgn } from '../../lib/pgn'
+import type { ParsedGame } from '../../lib/pgn'
+import { analyzeGame, LiveEngine } from '../../lib/stockfish'
+import type { EngineLine, MoveJudgment, PositionEval, SurveyPosition } from '../../lib/stockfish'
+import { computeDecisionNodes } from '../../lib/moveGraph'
+import { computeCorridor, findNarrowingEpisodes } from '../../lib/corridor'
+import { analyzeRobustness, analyzeStructure } from '../../lib/structure'
+import { analyzeTemporal } from '../../lib/temporal'
+import { explainEpisodes, structureSeries } from '../../lib/causes'
+import { buildGameChain } from '../../lib/markov'
+import { scoreWinProb } from '../../lib/winprob'
 import {
   clearLastOpenedId,
   deleteGame,
@@ -26,19 +26,24 @@ import {
   saveAnalysis,
   saveGameMeta,
   setLastOpenedId,
-} from '../lib/library'
-import type { GameMeta } from '../lib/library'
-import { AnalysisContext } from '../context/AnalysisContext'
-import type { AnalysisContextValue, BoardOverlay, DashboardTab, MoveFilter } from '../context/AnalysisContext'
+} from '../../lib/library'
+import type { GameMeta } from '../../lib/library'
+import { AnalysisContext } from '../../context/AnalysisContext'
+import type { AnalysisContextValue, BoardOverlay, DashboardTab, MoveFilter } from '../../context/AnalysisContext'
 import './AnalysisLayout.css'
 
 const LIVE_DEPTH = 20
 
-const TABS: { value: DashboardTab; label: string }[] = [
-  { value: 'overview', label: 'Corridor' },
-  { value: 'structure', label: 'Structure' },
-  { value: 'explore', label: 'Explore' },
-  { value: 'library', label: 'Library' },
+/**
+ * The dashboard reads left to right as a postmortem: what happened, which moves
+ * made it happen, then those moves one at a time. The step numbers are carried
+ * in the bar rather than only in the copy, because the question the old bar
+ * couldn't answer was which tab to open first.
+ */
+const STEPS: { value: DashboardTab; step: string; label: string; hint: string }[] = [
+  { value: 'report', step: '01', label: 'Report', hint: 'How the game went' },
+  { value: 'moments', step: '02', label: 'Moments', hint: 'The moves that decided it' },
+  { value: 'move', step: '03', label: 'The move', hint: 'One move, taken apart' },
 ]
 
 function AnalysisLayout() {
@@ -60,9 +65,10 @@ function AnalysisLayout() {
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [liveEngineEnabled, setLiveEngineEnabled] = useState(false)
-  const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
+  const [activeTab, setActiveTab] = useState<DashboardTab>('report')
   const [moveFilter, setMoveFilter] = useState<MoveFilter>('both')
   const [overlay, setOverlay] = useState<BoardOverlay>('none')
+  const [structureOpen, setStructureOpen] = useState(false)
   const [library, setLibrary] = useState<GameMeta[]>([])
   const liveEngineRef = useRef<LiveEngine | null>(null)
   const [liveLines, setLiveLines] = useState<EngineLine[]>([])
@@ -170,7 +176,7 @@ function AnalysisLayout() {
       const meta = library.find((g) => g.id === id)
       if (!meta) return
       loadPgnText(meta.pgn, meta.fileName)
-      setActiveTab('overview')
+      setActiveTab('report')
     },
     [library, loadPgnText],
   )
@@ -297,7 +303,7 @@ function AnalysisLayout() {
   // Percolation rebuilds the incidence graph a few hundred times, so it is the
   // one measure computed on demand — when the panel that shows it is open, or
   // when the overlay that paints it is selected.
-  const wantsRobustness = activeTab === 'structure' || overlay === 'fragility'
+  const wantsRobustness = structureOpen || overlay === 'fragility'
   const robustness = useMemo(() => {
     if (!position || !wantsRobustness) return null
     try {
@@ -508,6 +514,7 @@ function AnalysisLayout() {
     corridor,
     structure,
     robustness,
+    setStructureOpen,
     temporal,
     digests,
     explanations,
@@ -551,6 +558,55 @@ function AnalysisLayout() {
           </p>
         </div>
 
+        <div className="dashboard-tabs">
+          {STEPS.map(({ value, step, label, hint }) => (
+            <button
+              key={value}
+              type="button"
+              className={`dashboard-tabs__tab${activeTab === value ? ' is-active' : ''}`}
+              onClick={() => setActiveTab(value)}
+              title={hint}
+            >
+              <span className="dashboard-tabs__step">{step}</span>
+              <span className="dashboard-tabs__label">{label}</span>
+            </button>
+          ))}
+
+          <span className="dashboard-tabs__spacer" aria-hidden="true" />
+
+          {activeTab === 'moments' && (
+            <div className="move-filter" role="group" aria-label="Filter graphs by mover">
+              {(
+                [
+                  ['white', game.headers.White || 'White'],
+                  ['both', 'Both'],
+                  ['black', game.headers.Black || 'Black'],
+                ] as [MoveFilter, string][]
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={`move-filter__option${moveFilter === value ? ' is-active' : ''}`}
+                  onClick={() => setMoveFilter(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* The library is filing, not a step, so it sits off the end of
+              the run with a rule between it and the numbered tabs. */}
+          <button
+            type="button"
+            className={`dashboard-tabs__tab dashboard-tabs__tab--aside${activeTab === 'library' ? ' is-active' : ''}`}
+            onClick={() => setActiveTab('library')}
+            title="Your stored games"
+          >
+            <span className="dashboard-tabs__label">Library</span>
+          </button>
+        </div>
+
         <div className="analysis-nav__status">
           {analyzing && (
             <span className="analysis-nav__progress">
@@ -573,44 +629,10 @@ function AnalysisLayout() {
           </div>
 
           <div className="analysis-split__dashboard">
-            <div className="dashboard-tabs">
-              {TABS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={`dashboard-tabs__tab${activeTab === value ? ' is-active' : ''}`}
-                  onClick={() => setActiveTab(value)}
-                >
-                  {label}
-                </button>
-              ))}
-
-              {activeTab === 'overview' && (
-                <div className="move-filter" role="group" aria-label="Filter graphs by mover">
-                  {(
-                    [
-                      ['white', game.headers.White || 'White'],
-                      ['both', 'Both'],
-                      ['black', game.headers.Black || 'Black'],
-                    ] as [MoveFilter, string][]
-                  ).map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`move-filter__option${moveFilter === value ? ' is-active' : ''}`}
-                      onClick={() => setMoveFilter(value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
             <div className="dashboard-tabs__content">
-              {activeTab === 'overview' && <OverviewTab />}
-              {activeTab === 'structure' && <StructureTab />}
-              {activeTab === 'explore' && <ExploreTab />}
+              {activeTab === 'report' && <ReportTab />}
+              {activeTab === 'moments' && <MomentsTab />}
+              {activeTab === 'move' && <MoveTab />}
               {activeTab === 'library' && <LibraryTab />}
             </div>
           </div>

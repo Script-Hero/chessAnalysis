@@ -1,19 +1,95 @@
 .corridor-chart {
-  border: 1px solid rgba(201, 162, 75, 0.14);
+  border: 1px solid var(--rule);
   background: rgba(236, 226, 206, 0.02);
-  padding: 4px 0 0;
+}
+
+/* A persistent readout instead of a native SVG tooltip: the bars are too thin
+   and too many for a hover delay, and this doubles as a caption teaching the
+   encoding without a paragraph of prose above the chart. */
+.corridor-chart__readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  min-height: 34px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--rule);
+  background: rgba(232, 195, 117, 0.03);
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  color: var(--parchment-dim);
+}
+
+.corridor-chart__read-move {
+  color: var(--brass-bright);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.corridor-chart__read-figure {
+  color: var(--parchment);
+}
+
+.corridor-chart__read-figure strong {
+  font-size: var(--t-data);
+  font-weight: 600;
+}
+
+.corridor-chart__read-band,
+.corridor-chart__read-eval {
+  color: var(--parchment-faint);
+}
+
+.corridor-chart__read-eval {
+  margin-left: auto;
+}
+
+.corridor-chart__read-verdict {
+  padding: 1px 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: var(--t-micro);
+  letter-spacing: 0.3px;
+}
+
+.corridor-chart__read-verdict.is-best {
+  color: var(--status-good);
+}
+
+.corridor-chart__read-verdict.is-inside {
+  color: var(--white-accent);
+}
+
+.corridor-chart__read-verdict.is-outside {
+  color: var(--status-critical);
+}
+
+.corridor-chart__read-flag {
+  color: var(--brass);
+  font-size: var(--t-micro);
+  letter-spacing: 0.3px;
+}
+
+.corridor-chart__read-flag.is-broken {
+  color: var(--status-critical);
+}
+
+.corridor-chart__read-hint {
+  color: var(--parchment-faint);
+  font-style: normal;
+  opacity: 0.75;
 }
 
 .corridor-chart__svg {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 900 / 280;
+  aspect-ratio: 900 / 300;
 }
 
 .corridor-chart__grid {
-  stroke: rgba(236, 226, 206, 0.14);
-  stroke-dasharray: 2 4;
+  stroke: rgba(236, 226, 206, 0.1);
+  stroke-dasharray: 2 5;
 }
 
 .corridor-chart__axis {
@@ -21,66 +97,166 @@
 }
 
 .corridor-chart__tick,
-.corridor-chart__side-label {
+.corridor-chart__side-label,
+.corridor-chart__axis-title {
   font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--parchment-faint);
+  pointer-events: none;
+}
+
+.corridor-chart__axis-title {
   font-size: 9px;
-  fill: var(--parchment-dim);
-  opacity: 0.7;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  fill: var(--parchment-faint);
+  opacity: 0.65;
+}
+
+.corridor-chart__side-label {
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.corridor-chart__side-label.is-white {
+  fill: var(--white-accent);
+  opacity: 0.75;
+}
+
+.corridor-chart__side-label.is-black {
+  fill: var(--black-accent);
+  opacity: 0.75;
+}
+
+.corridor-chart__mark {
+  pointer-events: none;
 }
 
 .corridor-chart__bar {
-  cursor: pointer;
-  transition: opacity 100ms ease;
+  transition: opacity 90ms ease;
 }
 
-.corridor-chart__bar:hover {
-  opacity: 1;
+/* Hovering one column pushes the rest back, so a single move can be read out of
+   eighty without losing the shape of the game behind it. */
+.corridor-chart__svg.is-hovering .corridor-chart__bar:not(.is-hover),
+.corridor-chart__svg.is-hovering .corridor-chart__cut,
+.corridor-chart__svg.is-hovering .corridor-chart__exit {
+  opacity: 0.4;
 }
 
-.corridor-chart__bar.is-current {
+.corridor-chart__bar.is-current,
+.corridor-chart__bar.is-hover {
   stroke: var(--brass-bright);
-  stroke-width: 1;
+  stroke-width: 0.8;
 }
 
 .corridor-chart__cut {
   fill: var(--brass-bright);
-  cursor: pointer;
 }
 
 .corridor-chart__exit {
   fill: var(--status-critical);
 }
 
+.corridor-chart__lane-bg {
+  fill: rgba(236, 226, 206, 0.025);
+}
+
+.corridor-chart__lane-zero {
+  stroke: rgba(201, 162, 75, 0.28);
+  stroke-dasharray: 2 4;
+}
+
 .corridor-chart__eval {
   fill: none;
-  stroke: rgba(127, 168, 232, 0.88);
-  stroke-width: 1.7;
+  stroke: var(--black-accent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}
+
+.corridor-chart__eval-fill.is-white {
+  fill: var(--white-accent);
+  opacity: 0.16;
+}
+
+.corridor-chart__eval-fill.is-black {
+  fill: var(--black-accent);
+  opacity: 0.2;
+}
+
+.corridor-chart__x-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--parchment-faint);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.corridor-chart__eval-dot {
+  fill: var(--black-accent);
+  stroke: var(--ink);
+  stroke-width: 1.5;
 }
 
 .corridor-chart__cursor {
   stroke: var(--brass-bright);
-  stroke-width: 1.5;
-  opacity: 0.95;
+  stroke-width: 1.4;
+  opacity: 0.9;
   pointer-events: none;
 }
 
+.corridor-chart__hairline {
+  stroke: var(--parchment);
+  stroke-width: 1;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.corridor-chart__hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.corridor-chart__hit:focus {
+  outline: none;
+}
+
+.corridor-chart__hit:focus-visible {
+  fill: rgba(232, 195, 117, 0.1);
+  stroke: var(--brass-bright);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
 .corridor-chart__episode {
-  fill: rgba(232, 195, 117, 0.19);
+  fill: rgba(232, 195, 117, 0.13);
 }
 
 .corridor-chart__episode.is-collapsed {
-  fill: rgba(208, 59, 59, 0.3);
+  fill: rgba(208, 59, 59, 0.22);
 }
 
 .corridor-chart__legend {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px 16px;
   padding: 10px 12px 12px;
+  border-top: 1px solid var(--rule);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--t-micro);
   letter-spacing: 0.3px;
+  color: var(--parchment-faint);
+}
+
+.corridor-chart__legend-label {
   color: var(--parchment-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding-right: 4px;
+  border-right: 1px solid var(--rule);
 }
 
 .corridor-chart__legend-item {
@@ -94,6 +270,7 @@
   height: 10px;
   border-radius: 2px;
   display: inline-block;
+  flex: none;
 }
 
 .corridor-chart__swatch--cut {
@@ -103,7 +280,18 @@
   background: var(--brass-bright);
 }
 
+.corridor-chart__swatch--band {
+  background: rgba(232, 195, 117, 0.22);
+  border: 1px solid rgba(232, 195, 117, 0.35);
+}
+
 .corridor-chart__swatch--eval {
   height: 2px;
-  background: rgba(127, 168, 232, 0.7);
+  background: var(--black-accent);
+}
+
+@media (max-width: 720px) {
+  .corridor-chart__read-eval {
+    margin-left: 0;
+  }
 }

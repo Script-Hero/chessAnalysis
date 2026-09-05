@@ -1,11 +1,11 @@
 import { useEffect, useMemo } from 'react'
 import { Chessboard } from 'react-chessboard'
 import type { Arrow } from 'react-chessboard'
-import MoveBadge from '../components/MoveBadge'
-import { useAnalysis } from '../context/AnalysisContext'
-import { LAST_MOVE_HIGHLIGHT, SQUARE_DARK, SQUARE_LIGHT } from '../lib/boardTheme'
-import { OVERLAY_DESCRIPTION, OVERLAY_LABEL, overlayStyles } from '../lib/boardOverlay'
-import type { BoardOverlay } from '../context/AnalysisContext'
+import MoveBadge from '../../components/MoveBadge'
+import { useAnalysis } from '../../context/AnalysisContext'
+import { LAST_MOVE_HIGHLIGHT, SQUARE_DARK, SQUARE_LIGHT } from '../../lib/boardTheme'
+import { OVERLAY_DESCRIPTION, OVERLAY_LABEL, overlayStyles } from '../../lib/boardOverlay'
+import type { BoardOverlay } from '../../context/AnalysisContext'
 import './BoardPane.css'
 
 // Three distinct hues (not three opacities of one hue) so overlapping

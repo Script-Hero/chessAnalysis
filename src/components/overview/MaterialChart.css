@@ -2,7 +2,7 @@
   border: 1px solid rgba(201, 162, 75, 0.28);
   background: rgba(23, 19, 15, 0.55);
   backdrop-filter: blur(6px);
-  padding: 16px 18px 12px;
+  padding: 10px 14px 10px;
 }
 
 .material-chart__header {
@@ -10,14 +10,14 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .material-chart__title {
   font-family: var(--display);
   font-style: italic;
   font-weight: 500;
-  font-size: 18px;
+  font-size: 15px;
   color: var(--parchment);
   margin: 0;
 }
@@ -31,7 +31,7 @@
 .material-chart__svg {
   display: block;
   width: 100%;
-  height: 80px;
+  height: 72px;
   cursor: crosshair;
   touch-action: none;
 }

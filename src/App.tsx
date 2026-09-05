@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import AnalysisLayout from './pages/AnalysisLayout'
+import AnalysisLayout from './pages/AnalysisLayout/AnalysisLayout'
 
 function App() {
   return (

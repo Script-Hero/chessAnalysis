@@ -1,14 +1,14 @@
-import { useMemo } from 'react'
-import InfoNote from '../components/InfoNote'
-import PieceGraphView from '../components/network/PieceGraphView'
-import MetricStat from '../components/network/MetricStat'
-import PercolationChart from '../components/network/PercolationChart'
-import CoordinationChart from '../components/network/CoordinationChart'
-import ChurnChart from '../components/network/ChurnChart'
-import { useAnalysis } from '../context/AnalysisContext'
-import { findPressurePoints } from '../lib/causes'
-import { coordinationSeries } from '../lib/structure'
-import type { Side } from '../lib/analysis'
+import { useEffect, useMemo } from 'react'
+import InfoNote from '../../components/InfoNote'
+import PieceGraphView from '../../components/network/PieceGraphView'
+import MetricStat from '../../components/network/MetricStat'
+import PercolationChart from '../../components/network/PercolationChart'
+import CoordinationChart from '../../components/network/CoordinationChart'
+import ChurnChart from '../../components/network/ChurnChart'
+import { useAnalysis } from '../../context/AnalysisContext'
+import { findPressurePoints } from '../../lib/causes'
+import { coordinationSeries } from '../../lib/structure'
+import type { Side } from '../../lib/analysis'
 import './StructureTab.css'
 
 const PIECE_WORD: Record<string, string> = {
@@ -27,13 +27,22 @@ function moveNumber(ply: number): string {
 /**
  * The position read as a set of graphs over the same board.
  *
- * Ordered by what a player can do with it. The pressure points come first
+ * This is step three's "Why" panel: it answers what made the move on the board
+ * good or bad, in terms of the position rather than the engine's number.
+ * Ordered by what a player can do with it — the pressure points come first
  * because they are the only section that states a plan; the graph drawing comes
  * second because it is where that plan is checked; the measures come last,
  * each against a null model, because they are evidence rather than conclusions.
  */
 function StructureTab() {
-  const { game, ply, goTo, structure, robustness, temporal, orientation } = useAnalysis()
+  const { game, ply, goTo, structure, robustness, temporal, orientation, setStructureOpen } = useAnalysis()
+
+  // Mounting is the signal that the removal curves are wanted: this panel is
+  // rendered only while step three's structural reading is the open sub-tab.
+  useEffect(() => {
+    setStructureOpen(true)
+    return () => setStructureOpen(false)
+  }, [setStructureOpen])
 
   const white = game.headers.White ?? 'White'
   const black = game.headers.Black ?? 'Black'
