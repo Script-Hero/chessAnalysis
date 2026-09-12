@@ -52,6 +52,18 @@ export type Moment = {
   score: number
   /** Other move indices this row's story already tells; used to avoid telling it twice. */
   covers: number[]
+  /** The headline side's win% around the moment, for the row's sparkline. */
+  swing: Swing
+}
+
+export type Swing = {
+  /** Position index of `values[0]`. */
+  start: number
+  /** Positions bounding the change the row describes. */
+  from: number
+  to: number
+  /** Win% for the headline side, one per position from `start`. */
+  values: number[]
 }
 
 export type MomentInput = {
@@ -176,7 +188,18 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
   }
 
   const candidates: Moment[] = []
-  const add = (m: Omit<Moment, 'covers'> & { covers?: number[] }) => candidates.push({ covers: [], ...m })
+  /**
+   * `change` is the span of positions the story is about — one move by default.
+   * Single moves get two full moves of context either side so momentum shows.
+   */
+  const add = ({ change, ...m }: Omit<Moment, 'covers' | 'swing'> & { covers?: number[]; change?: [number, number] }) => {
+    const [from, to] = change ?? [m.index, m.index + 1]
+    const pad = to - from <= 2 ? 4 : 2
+    const start = Math.max(0, from - pad)
+    const end = Math.min(n, to + pad)
+    const values = Array.from({ length: end - start + 1 }, (_, k) => win(m.side, start + k))
+    candidates.push({ covers: [], ...m, swing: { start, from, to, values } })
+  }
 
   // --- The shape of the game --------------------------------------------------
 
@@ -218,6 +241,7 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
         outcome(side) === 'draw' ? ' · the game was drawn' : ` · ${sideName(other(side))} went on to win`,
       ],
       score: 25 + (win(side, peak) - win(side, n)) * 0.4,
+      change: [peak, anchor + 1],
     })
   }
 
@@ -355,7 +379,8 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
     }
 
     if (Math.sign(win(side, i) - 50) !== Math.sign(win(side, i + 1) - 50)) score += 5
-    add({ kind, side, index: i, headline, detail, score, covers })
+    const change: [number, number] = kind === 'letOff' ? [i - 1, i + 1] : collapse ? [Math.max(0, collapse.episode.startPly - 1), i + 1] : [i, i + 1]
+    add({ kind, side, index: i, headline, detail, score, covers, change })
   }
 
   // --- Credit ------------------------------------------------------------------
@@ -404,6 +429,7 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
           detail: [`found ${describeMove(move)} after `, ref(i - 1), ' allowed it', ...(heldPhrase(i) ? [` · ${heldPhrase(i)}`] : [])],
           score: loss(i - 1) + 10,
           covers: [i - 1],
+          change: [i - 1, i + 1],
         })
       }
     }
@@ -427,6 +453,7 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
         ],
         score: cracked ? replyLoss + 8 : 10,
         covers: [i + 1],
+        change: [i, i + 2],
       })
     }
   }
@@ -462,6 +489,7 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
           ` took win chances from ${pct(win(side, bleed.start))} to ${pct(win(side, bleed.end + 1))}`,
         ],
         score: bleed.change * 0.8,
+        change: [bleed.start, bleed.end + 1],
       })
     }
 
@@ -480,6 +508,7 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
           headline: 'converted cleanly',
           detail: [`stayed accurate for ${rest.length} moves from ${evalFor(side, p)} ${mated ? 'to checkmate' : 'to the finish'}`],
           score: 18,
+          change: [p, n],
         })
       }
     }
@@ -518,6 +547,7 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
             ],
             score: outcome(side) === 'win' ? 30 : 22,
             covers: gift >= 0 ? [gift] : [],
+            change: [trough, back],
           })
         }
       }
