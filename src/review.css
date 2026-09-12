@@ -30,12 +30,15 @@
 .page-analysis :is(.dashboard-tabs__tab,.explore-tab__subtab-btn,.candidate-lines__stats dt,.graph-shape dt,.decision-profile__title,.player-summary__accuracy-label,.metric-stat__label,.board-pane__overlay,.gamebar__reset) { text-transform: none; }
 .overview { gap: 28px; }
 .review-moments { width: 100%; }
-.review-moment { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0; text-align: left; border: 0; border-bottom: 1px solid var(--rule); background: none; color: var(--parchment); }
+.review-moments__list { list-style: none; margin: 0; padding: 0; }
+.review-moment { padding: 14px 0; border-bottom: 1px solid var(--rule); }
 .review-moment:hover { background: var(--ink-2); }
-.review-moment strong { font-size: 15px; display: block; }
-.review-moment small { font-size: 13px; color: var(--parchment-dim); display: block; margin-top: 5px; }
+.review-moment__main { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 0; text-align: left; border: 0; background: none; color: var(--parchment); }
+.review-moment__main strong { font-size: 15px; font-weight: 500; }
+.review-moment__detail { font-size: 13px; line-height: 1.5; color: var(--parchment-dim); margin: 5px 0 0; }
+.review-moment__ref { border: 0; background: none; padding: 0; font: inherit; color: var(--brass-bright); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .review-moment__move { display: flex; align-items: center; gap: 12px; white-space: nowrap; color: var(--brass-bright); }
-.review-moment__side { font-size: 13px; font-weight: 600; }
+.review-moment__side { font-weight: 700; }
 .review-moment__side.is-white { color: var(--white-accent); }
 .review-moment__side.is-black { color: var(--black-accent); }
 .overview.overview--report { display: flex; height: auto; gap: 24px; }
@@ -128,7 +131,7 @@ details[open] > summary { margin-bottom: 16px; color: var(--parchment); }
   .board-pane { gap: 8px; }
   .analysis-split__dashboard { width: 100%; }
   .dashboard-tabs__content { overflow: visible; padding: 0 0 32px; }
-  .review-moment { gap: 10px; }
+  .review-moment__main { gap: 10px; }
   .review-moment__move { white-space: normal; flex-shrink: 0; max-width: 100px; font-size: 14px; }
   .candidate-lines__stats { gap: 10px; }
   .candidate-lines__stats dd { font-size: 15px; }
