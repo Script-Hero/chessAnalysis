@@ -40,23 +40,32 @@ export default function ReviewMoments() {
       {moments?.length ? (
         <ol className="review-moments__list">
           {moments.map((m) => (
-            <li key={`${m.kind}-${m.index}`} className="review-moment">
-              <button className="review-moment__main" onClick={() => studyDecision(m.index)}>
+            // The whole row opens the move; the headline button is its keyboard target, and
+            // its click bubbles here like any other click in the row.
+            <li key={`${m.kind}-${m.index}`} className="review-moment" onClick={() => studyDecision(m.index)}>
+              <button className="review-moment__main">
                 <strong>
                   <span className={`review-moment__side is-${m.side}`}><span aria-hidden="true">●</span> {m.side === 'white' ? 'White' : 'Black'}</span> {m.headline}
                 </strong>
               </button>
               <SwingChart swing={m.swing} side={m.side} />
-              <button className="review-moment__move" tabIndex={-1} onClick={() => studyDecision(m.index)}>
+              <span className="review-moment__move">
                 {moveLabel(m.index, game.moves[m.index].san)}
                 <ArrowRight size={18} />
-              </button>
+              </span>
               <p className="review-moment__detail">
                 {m.detail.map((part, i) =>
                   typeof part === 'string' ? (
                     part
                   ) : (
-                    <button key={i} className="review-moment__ref" onClick={() => studyDecision(part.index)}>
+                    <button
+                      key={i}
+                      className="review-moment__ref"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        studyDecision(part.index)
+                      }}
+                    >
                       {part.label}
                     </button>
                   ),
