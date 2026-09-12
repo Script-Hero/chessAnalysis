@@ -46,7 +46,11 @@ function ReportTab() {
 
   return (
     <div className="overview overview--report">
-      <ReviewMoments />
+      <div className="step-next step-next--cta">
+        <button type="button" className="step-next__button" onClick={() => setActiveTab('moments')}>
+          Explore Key Moves and Moments →
+        </button>
+      </div>
 
       <section className="overview__section">
         <PlayerSummary
@@ -75,15 +79,6 @@ function ReportTab() {
           />)}
 
       </section>
-
-
-
-      <footer className="step-next">
-        <p className="step-next__text"></p>
-        <button type="button" className="step-next__button" onClick={() => setActiveTab('moments')}>
-          02 · The moves that decided it →
-        </button>
-      </footer>
     </div>
   )
 }

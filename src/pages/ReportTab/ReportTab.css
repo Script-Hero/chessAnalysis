@@ -31,12 +31,12 @@
     min-height: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    /* lead · the two full-width plots · the pair of side readouts · hand-off.
+    /* hand-off · lead · the two full-width plots · the pair of side readouts.
        The three elastic rows take a min-content floor so that a pane too short
        for the report scrolls rather than letting one card grow over the next;
        every card below bounds its own min-content, or an SVG's aspect ratio
        would set that floor instead. */
-    grid-template-rows: auto minmax(min-content, 1fr) minmax(min-content, 1fr) minmax(min-content, 1fr) auto;
+    grid-template-rows: auto auto minmax(min-content, 1fr) minmax(min-content, 1fr) minmax(min-content, 1fr);
   }
 
   .overview--report > .overview__section {
@@ -49,27 +49,27 @@
      material, clock — is the order the sections are grouped in, not the order
      they are read on a wide pane. */
   .overview--report .player-summary {
-    grid-area: 1 / 1 / 2 / -1;
-  }
-
-  .overview--report .eval-chart {
     grid-area: 2 / 1 / 3 / -1;
   }
 
-  .overview--report .material-chart {
+  .overview--report .eval-chart {
     grid-area: 3 / 1 / 4 / -1;
   }
 
+  .overview--report .material-chart {
+    grid-area: 4 / 1 / 5 / -1;
+  }
+
   .overview--report .phase-accuracy {
-    grid-area: 4 / 1 / 5 / 2;
+    grid-area: 5 / 1 / 6 / 2;
   }
 
   .overview--report .time-chart {
-    grid-area: 4 / 2 / 5 / -1;
+    grid-area: 5 / 2 / 6 / -1;
   }
 
   .overview--report .step-next {
-    grid-area: 5 / 1 / 6 / -1;
+    grid-area: 1 / 1 / 2 / -1;
   }
 
   /* Without clock data the phase table has the last row to itself. */
@@ -77,14 +77,6 @@
     grid-column: 1 / -1;
   }
 
-  .overview--report .step-next {
-    margin-top: 0;
-    padding-top: 8px;
-  }
-
-  .overview--report .step-next__button {
-    padding: 7px 14px;
-  }
 
   /* ── Cards that take the height they are given ─────────────────────────
      Each chart card becomes a column whose plot is the elastic part; the
@@ -129,4 +121,40 @@
     flex: 1;
     min-height: 26px;
   }
+}
+
+/* ── The hand-off to step two, as the page's call to action ──────────────
+   Centred and filled so it reads as the thing to do next, and placed first so
+   it is seen before the readouts. Its height is fixed by padding and one line
+   of text, so the grid's `auto` row stays small and the elastic chart rows
+   below absorb the difference. The shared hand-off rule sits under a rule at
+   the foot of a tab; at the head it mirrors that, with the rule underneath. */
+
+.overview--report .step-next--cta {
+  justify-content: center;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 10px;
+  border-top: 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.overview--report .step-next--cta .step-next__button {
+  font-size: var(--t-data);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  background: var(--brass);
+  border: 1px solid var(--brass-bright);
+  border-radius: 4px;
+  padding: 12px 36px;
+  min-width: min(360px, 100%);
+  box-shadow: 0 2px 14px rgba(201, 162, 75, 0.25);
+}
+
+.overview--report .step-next--cta .step-next__button:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--brass-bright);
+  border-color: var(--brass-bright);
+  box-shadow: 0 2px 18px rgba(232, 195, 117, 0.4);
 }
