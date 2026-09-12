@@ -26,7 +26,7 @@ function CutMoments({ moments, currentPly, onSelect, whiteLabel, blackLabel }: C
   if (moments.length === 0) {
     return (
       <p className="cut-moments__empty">
-        No position pinched to a single surviving move.
+        No effectively one-choice decisions detected.
       </p>
     )
   }
@@ -36,7 +36,7 @@ function CutMoments({ moments, currentPly, onSelect, whiteLabel, blackLabel }: C
   return (
     <div className="cut-moments">
       <p className="cut-moments__summary">
-        {moments.length} position{moments.length === 1 ? '' : 's'} where exactly one move held — {survived} found,{' '}
+        {moments.length} effectively one-choice decision{moments.length === 1 ? '' : 's'} — {survived} held,{' '}
         {moments.length - survived} missed.
       </p>
 
@@ -53,7 +53,7 @@ function CutMoments({ moments, currentPly, onSelect, whiteLabel, blackLabel }: C
               </span>
               <span className="cut-moments__move">{moveLabel(m)}</span>
               <span className="cut-moments__detail">
-                1 of {m.legalCount} moves held — {Math.round(m.criticality * 100)}% of the move set lost it
+                {m.legalCount} legal moves · {Math.round(m.criticality * 100)}% outside tolerance
               </span>
               <span className={`cut-moments__verdict${m.survived ? ' is-good' : ''}`}>
                 {m.survived ? 'found it' : 'missed it'}

@@ -38,7 +38,7 @@ export const OVERLAY_LABEL: Record<BoardOverlay, string> = {
   control: 'Control',
   delta: 'Move impact',
   load: 'Load-bearing',
-  cut: 'Defence cut',
+  cut: 'Defence duties',
   fragility: 'Fragility',
 }
 
@@ -46,8 +46,8 @@ export const OVERLAY_DESCRIPTION: Record<BoardOverlay, string> = {
   none: '',
   control: 'Net control per square. Gold is White, blue is Black.',
   delta: 'Squares whose control the last move changed.',
-  load: 'Ground each piece is the only one covering.',
-  cut: 'Ringed: deflect it and the defence breaks. Shaded: what falls.',
+  load: 'Pieces weighted by their unique square coverage.',
+  cut: 'Rings mark removal-sensitive defenders; shading marks model shortfalls.',
   fragility: 'Control lost if that one piece disappears.',
 }
 

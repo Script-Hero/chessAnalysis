@@ -13,7 +13,7 @@ const OPENNESS_ORDER: Openness[] = ['forced', 'narrow', 'open']
 const CHOICE_ORDER: Choice[] = ['best', 'inside', 'outside']
 
 const OPENNESS_SHORT: Record<Openness, string> = {
-  forced: 'Forced',
+  forced: 'Effectively one',
   narrow: 'Narrow',
   open: 'Open',
 }
@@ -43,7 +43,6 @@ function DecisionMatrix({ decisions, currentPly, onSelect }: DecisionMatrixProps
   const matrix = computeDecisionMatrix(decisions)
 
   const matching = selected ? decisions.filter((d) => d.cell === selected) : []
-  const maxCount = Math.max(1, ...Object.values(matrix.counts))
 
   return (
     <div className="decision-matrix">
@@ -61,14 +60,13 @@ function DecisionMatrix({ decisions, currentPly, onSelect }: DecisionMatrixProps
             openness={openness}
             counts={matrix.counts}
             total={matrix.byOpenness[openness]}
-            maxCount={maxCount}
             selected={selected}
             onSelect={setSelected}
           />
         ))}
       </div>
 
-      <p className="decision-matrix__caption">{matrix.total} decisions · click a cell to list its moves</p>
+      <p className="decision-matrix__caption">{matrix.total} decisions · percentages and shading are within each row</p>
 
       {selected && (
         <div className="decision-matrix__drill">
@@ -104,14 +102,12 @@ function RowFragment({
   openness,
   counts,
   total,
-  maxCount,
   selected,
   onSelect,
 }: {
   openness: Openness
   counts: Record<DecisionCell, number>
   total: number
-  maxCount: number
   selected: DecisionCell | null
   onSelect: (cell: DecisionCell | null) => void
 }) {
@@ -131,13 +127,12 @@ function RowFragment({
             type="button"
             className={`decision-matrix__cell${selected === cell ? ' is-selected' : ''}`}
             style={{
-              // Intensity encodes the count; hue encodes the outcome. Sharing
-              // one channel between the two would make an empty "left the
-              // corridor" cell look like a full one.
-              background: `color-mix(in srgb, var(${CHOICE_COLOR[choice]}) ${Math.round((count / maxCount) * 55)}%, transparent)`,
+              // Intensity encodes row share; hue encodes the outcome.
+              background: `color-mix(in srgb, var(${CHOICE_COLOR[choice]}) ${Math.round(share * 55)}%, transparent)`,
             }}
             onClick={() => onSelect(selected === cell ? null : cell)}
             disabled={count === 0}
+            title={`${count} of ${total} decisions in this row (${Math.round(share * 100)}%)`}
           >
             <span className="decision-matrix__count">{count}</span>
             <span className="decision-matrix__share">{total > 0 ? `${Math.round(share * 100)}%` : '—'}</span>

@@ -181,9 +181,9 @@ function PieceGraphView({ structure, orientation, focus = [] }: PieceGraphViewPr
                   {PIECE_GLYPH[node.type]}
                 </text>
                 <title>
-                  {`${node.square} — ${node.color}, ${Math.round(load * 100)}% of the position's load-bearing weight` +
+                  {`${node.square} — ${node.color}, ${Math.round(load * 100)}% of the largest piece's unique-coverage weight` +
                     (node.hanging ? `, loses ${node.exchangeLoss.toFixed(1)} pawns if taken` : '') +
-                    (cutSquares.has(node.square) ? ', min-cut defender' : '')}
+                    (cutSquares.has(node.square) ? ', removal-sensitive defender' : '')}
                 </title>
               </g>
             )
@@ -202,10 +202,10 @@ function PieceGraphView({ structure, orientation, focus = [] }: PieceGraphViewPr
           <span className="piece-graph__key piece-graph__key--size" /> node size = ground only that piece covers
         </li>
         <li>
-          <span className="piece-graph__key piece-graph__key--cut" /> min-cut defender
+          <span className="piece-graph__key piece-graph__key--cut" /> removal-sensitive defender
         </li>
         <li>
-          <span className="piece-graph__key piece-graph__key--unheld" /> cannot be held
+          <span className="piece-graph__key piece-graph__key--unheld" /> model shortfall
         </li>
       </ul>
     </div>

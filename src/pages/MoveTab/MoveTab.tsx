@@ -65,29 +65,31 @@ function MoveTab() {
     setLiveEngineEnabled,
     liveLines,
     liveDepth,
+    decisionIndex, studyDecision, setActiveTab, boardFen, previewFen, setPreviewFen, setFocusSquare,
   } = useAnalysis()
   const [subTab, setSubTab] = useState<MoveSubTab>('lines')
   const [branchThreshold, setBranchThreshold] = useState<BranchThreshold>(DEFAULT_BRANCH_THRESHOLD)
   const [collapseThreshold, setCollapseThreshold] = useState<CollapseThreshold>('off')
 
-  const position = game.positions[ply]
+  const position = game.positions[decisionIndex]
 
   const treeRows = useMemo(() => {
     if (!judgments || !lines) return null
     return buildGameTreeRows(game.positions, game.moves, judgments, lines, DEFAULT_BRANCH_PLIES, branchThreshold)
   }, [game, judgments, lines, branchThreshold])
 
-  const currentLines = lines?.[ply] ?? null
-  const currentDecision = decisions?.[ply] ?? null
+  const currentLines = lines?.[decisionIndex] ?? null
+  const currentDecision = decisions?.[decisionIndex] ?? null
 
-  const played = ply > 0 ? game.moves[ply - 1] : null
+  const played = game.moves[decisionIndex] ?? null
   const playedLabel = played
-    ? ply % 2 === 1
-      ? `${Math.floor((ply - 1) / 2) + 1}.${played.san}`
-      : `${Math.floor((ply - 1) / 2) + 1}…${played.san}`
+    ? decisionIndex % 2 === 0
+      ? `${Math.floor(decisionIndex / 2) + 1}.${played.san}`
+      : `${Math.floor(decisionIndex / 2) + 1}…${played.san}`
     : null
-  const mover = ply % 2 === 1 ? game.headers.White ?? 'White' : game.headers.Black ?? 'Black'
-  const caption = SUBTABS.find((t) => t.value === subTab)?.caption ?? ''
+  const mover = decisionIndex % 2 === 0 ? game.headers.White ?? 'White' : game.headers.Black ?? 'Black'
+  const reviewIndices = decisions?.filter(d => d.choice === 'outside' || d.isCut).map(d => d.index) ?? []
+  const nextReview = reviewIndices.find(i => i > decisionIndex)
 
   return (
     <div className="explore-tab">
@@ -100,14 +102,14 @@ function MoveTab() {
           <p className="move-focus__played">
             <span className="move-focus__mover">{mover} played</span>
             <strong className="move-focus__san">{playedLabel}</strong>
-            <MoveBadge judgment={judgments?.[ply - 1]} />
+            <MoveBadge judgment={judgments?.[decisionIndex]} />
           </p>
         ) : (
           <p className="move-focus__played">
             <span className="move-focus__mover">Starting position</span>
           </p>
         )}
-        <span className="move-focus__hint">← → steps through the game</span>
+        <div className="review-actions"><button onClick={() => setActiveTab('moments')}>All moments</button><button onClick={() => setActiveTab('explore')}>Try a move</button><button disabled={nextReview === undefined} onClick={() => nextReview !== undefined && studyDecision(nextReview)}>Next review moment</button></div>
       </div>
 
       <div className="explore-tab__subtabs" role="tablist" aria-label="What to look at for this move">
@@ -118,17 +120,16 @@ function MoveTab() {
             role="tab"
             aria-selected={subTab === value}
             className={`explore-tab__subtab-btn${subTab === value ? ' is-active' : ''}`}
-            onClick={() => setSubTab(value)}
+            onClick={() => { setSubTab(value); setPreviewFen(null); setFocusSquare(null) }}
           >
             {label}
           </button>
         ))}
       </div>
 
-      <p className="explore-tab__caption">{caption}</p>
 
       <div className="explore-tab__subtab-content">
-        {subTab === 'lines' && <CandidateLines decision={currentDecision} fen={position} lines={currentLines} />}
+        {subTab === 'lines' && <CandidateLines key={decisionIndex} decision={currentDecision} fen={position} lines={currentLines} />}
 
         {subTab === 'why' && <StructureTab />}
 
@@ -187,10 +188,10 @@ function MoveTab() {
           <LiveEnginePanel
             enabled={liveEngineEnabled}
             onToggle={setLiveEngineEnabled}
-            storedLines={currentLines}
+            storedLines={previewFen ? null : lines?.[ply] ?? null}
             liveLines={liveLines}
             liveDepth={liveDepth}
-            fen={position}
+            fen={boardFen}
           />
         )}
       </div>

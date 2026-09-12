@@ -6,6 +6,7 @@ type LeverageListProps = {
   label: string
   currentPly: number
   onSelect: (positionIndex: number) => void
+  scale?: number
 }
 
 function moveLabel(point: LeveragePoint): string {
@@ -24,14 +25,14 @@ function moveLabel(point: LeveragePoint): string {
  * still worth playing moves it a lot. The terms sum exactly to the game's whole
  * swing, so nothing here is a threshold or a weighting chosen by hand.
  */
-function LeverageList({ chain, label, currentPly, onSelect }: LeverageListProps) {
+function LeverageList({ chain, label, currentPly, onSelect, scale }: LeverageListProps) {
   const top = chain.ranked.filter((p) => p.leverage > 0.05).slice(0, 6)
 
   if (top.length === 0) {
     return <p className="leverage__empty">No single decision by {label} moved the outcome measurably.</p>
   }
 
-  const peak = top[0].leverage
+  const peak = scale ?? top[0].leverage
 
   return (
     <div className="leverage">

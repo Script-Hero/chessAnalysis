@@ -28,7 +28,7 @@ function MaterialChart({ positions, currentPly, onSelectPly }: MaterialChartProp
   const xAt = (i: number) => PAD.left + (n === 1 ? 0 : (i / (n - 1)) * INNER_W)
   const yAt = (v: number) => MID_Y - (Math.max(-maxAbs, Math.min(maxAbs, v)) / maxAbs) * (INNER_H / 2)
 
-  const linePoints = values.map((v, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i)} ${yAt(v)}`).join(' ')
+  const linePoints = values.map((v, i) => i === 0 ? `M ${xAt(i)} ${yAt(v)}` : `H ${xAt(i)} V ${yAt(v)}`).join(' ')
   const areaPath = n === 0 ? '' : `${linePoints} L ${xAt(n - 1)} ${MID_Y} L ${xAt(0)} ${MID_Y} Z`
 
   const plyFromClientX = (clientX: number): number | null => {
@@ -47,7 +47,7 @@ function MaterialChart({ positions, currentPly, onSelectPly }: MaterialChartProp
   return (
     <div className="material-chart">
       <div className="material-chart__header">
-        <h3 className="material-chart__title">Material balance</h3>
+        <h3 className="material-chart__title">Material balance · pawns</h3>
         <span className="material-chart__readout">
           {activeValue > 0 ? `White +${activeValue}` : activeValue < 0 ? `Black +${-activeValue}` : 'Even'}
         </span>

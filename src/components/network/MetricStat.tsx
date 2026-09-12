@@ -43,7 +43,8 @@ function MetricStat({ label, scored, format, higherIsBetter = true, help }: Metr
       ? Math.max(0, Math.min(1, 0.5 + (scored.value - reference.mean) / (8 * reference.sd)))
       : null
 
-  const tone = z === null ? 'neutral' : (z > 0) === higherIsBetter ? 'good' : 'poor'
+  void higherIsBetter
+  const tone = 'neutral'
 
   return (
     <div className={`metric-stat metric-stat--${tone}`}>
@@ -69,7 +70,7 @@ function MetricStat({ label, scored, format, higherIsBetter = true, help }: Metr
               <span className="metric-stat__z">
                 {' '}
                 ({z > 0 ? '+' : ''}
-                {z.toFixed(1)} sd, baseline {render(reference!.mean)})
+                {z.toFixed(1)} sd vs randomized material, mean {render(reference!.mean)})
               </span>
             )}
           </p>

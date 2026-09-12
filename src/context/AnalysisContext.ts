@@ -15,7 +15,7 @@ import type { GameMeta } from '../lib/library'
  * actually goes: what happened, which moves decided it, then one move at a
  * time. The library is filing rather than a step, so it sits outside the run.
  */
-export type DashboardTab = 'report' | 'moments' | 'move' | 'library'
+export type DashboardTab = 'report' | 'moments' | 'move' | 'explore' | 'library'
 export type MoveFilter = 'white' | 'black' | 'both'
 
 /**
@@ -33,6 +33,15 @@ export type AnalysisContextValue = {
   /** Library id of the game on screen. */
   gameKey: string | null
   ply: number
+  decisionIndex: number
+  boardPhase: 'before' | 'after'
+  setBoardPhase: (phase: 'before' | 'after') => void
+  boardFen: string
+  previewFen: string | null
+  setPreviewFen: (fen: string | null) => void
+  focusSquare: string | null
+  setFocusSquare: (square: string | null) => void
+  studyDecision: (index: number) => void
   goTo: (target: number) => void
   orientation: Side
   setOrientation: (orientation: Side) => void

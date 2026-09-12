@@ -419,7 +419,11 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(0, 1.85fr);
+  /* The board is the thing being read; the dashboard is the commentary around
+     it. The ratio is deliberately closer to even than the old 1 : 1.85 — the
+     board grows with the window at every size rather than staying a thumbnail
+     beside a very wide panel. */
+  grid-template-columns: minmax(320px, 1fr) minmax(0, 1.45fr);
   gap: clamp(28px, 4vw, 56px);
   width: 100%;
   margin: 0 auto;

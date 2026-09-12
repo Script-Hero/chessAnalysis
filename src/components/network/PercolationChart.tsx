@@ -7,8 +7,8 @@ type PercolationChartProps = {
 }
 
 const WIDTH = 260
-const HEIGHT = 110
-const PAD = 18
+const HEIGHT = 150
+const PAD = 30
 
 /**
  * Control retained as pieces are removed, targeted against random.
@@ -57,23 +57,28 @@ function PercolationChart({ percolation, label }: PercolationChartProps) {
         <path d={band} className="percolation__band" />
         <path d={path(random)} className="percolation__curve percolation__curve--random" />
         <path d={path(targeted)} className="percolation__curve percolation__curve--targeted" />
+        <text x={2} y={y(1)+4} fill="currentColor" fontSize={10}>100%</text>
+        <text x={8} y={y(0)+4} fill="currentColor" fontSize={10}>0%</text>
+        <text x={PAD} y={HEIGHT-12} fill="currentColor" fontSize={10}>0</text>
+        <text x={WIDTH-PAD} y={HEIGHT-12} fill="currentColor" fontSize={10}>{steps}</text>
       </svg>
+      <p>Pieces removed · control retained<br />Solid: targeted · dashed: random</p>
 
       <dl className="percolation__stats">
         <div>
-          <dt>Fragility</dt>
+          <dt>Targeted area loss</dt>
           <dd>{Math.round(percolation.fragility * 100)}%</dd>
         </div>
         <div>
-          <dt>Gain from aiming</dt>
+          <dt>Area gap vs random</dt>
           <dd>{Math.round(percolation.concentration * 100)}%</dd>
         </div>
       </dl>
 
       <p className="percolation__reading">
         {percolation.concentration < 0.04
-          ? 'Control is spread across the army — no single piece to aim at.'
-          : `Held up by ${namePieces(percolation)}.`}
+          ? 'Similar control retention under both removal policies.'
+          : `Largest single-removal impacts: ${namePieces(percolation)}.`}
       </p>
     </div>
   )

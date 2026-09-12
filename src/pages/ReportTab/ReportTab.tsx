@@ -4,6 +4,7 @@ import PhaseAccuracy from '../../components/overview/PhaseAccuracy'
 import MaterialChart from '../../components/overview/MaterialChart'
 import TimePressureChart from '../../components/overview/TimePressureChart'
 import EvalChart from '../../components/explore/EvalChart'
+import ReviewMoments from '../../components/corridor/ReviewMoments'
 import { useAnalysis } from '../../context/AnalysisContext'
 import { computeAccuracy, computePhaseAccuracy, hasClockData } from '../../lib/analysis'
 import '../shared/Dashboard.css'
@@ -45,6 +46,7 @@ function ReportTab() {
 
   return (
     <div className="overview overview--report">
+      <ReviewMoments />
 
       <section className="overview__section">
         <PlayerSummary

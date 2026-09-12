@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DragEvent } from 'react'
 import BoardPane from '../BoardPane/BoardPane'
+import ExploreTab from '../ExploreTab/ExploreTab'
 import ReportTab from '../ReportTab/ReportTab'
 import MomentsTab from '../MomentsTab/MomentsTab'
 import MoveTab from '../MoveTab/MoveTab'
@@ -44,6 +45,7 @@ const STEPS: { value: DashboardTab; step: string; label: string; hint: string }[
   { value: 'report', step: '01', label: 'Report', hint: 'How the game went' },
   { value: 'moments', step: '02', label: 'Moments', hint: 'The moves that decided it' },
   { value: 'move', step: '03', label: 'The move', hint: 'One move, taken apart' },
+  { value: 'explore', step: '04', label: 'Explore', hint: 'Try moves, replay exchanges, compare routes' },
 ]
 
 function AnalysisLayout() {
@@ -56,6 +58,10 @@ function AnalysisLayout() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const [ply, setPly] = useState(0)
+  const [decisionIndex, setDecisionIndex] = useState(0)
+  const [boardPhase, updateBoardPhase] = useState<'before' | 'after'>('before')
+  const [previewFen, setPreviewFen] = useState<string | null>(null)
+  const [focusSquare, setFocusSquare] = useState<string | null>(null)
   const [orientation, setOrientation] = useState<'white' | 'black'>('white')
   const [evals, setEvals] = useState<PositionEval[] | null>(null)
   const [judgments, setJudgments] = useState<(MoveJudgment | null)[] | null>(null)
@@ -65,7 +71,12 @@ function AnalysisLayout() {
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [liveEngineEnabled, setLiveEngineEnabled] = useState(false)
-  const [activeTab, setActiveTab] = useState<DashboardTab>('report')
+  const [activeTab, updateActiveTab] = useState<DashboardTab>('report')
+  const setActiveTab = (tab: DashboardTab) => {
+    setPreviewFen(null)
+    setFocusSquare(null)
+    updateActiveTab(tab)
+  }
   const [moveFilter, setMoveFilter] = useState<MoveFilter>('both')
   const [overlay, setOverlay] = useState<BoardOverlay>('none')
   const [structureOpen, setStructureOpen] = useState(false)
@@ -87,6 +98,12 @@ function AnalysisLayout() {
   }, [])
 
   const clearAnalysisState = useCallback(() => {
+    setDecisionIndex(0)
+    setPly(0)
+    updateBoardPhase('before')
+    setPreviewFen(null)
+    setFocusSquare(null)
+    updateActiveTab('report')
     setEvals(null)
     setJudgments(null)
     setLines(null)
@@ -126,7 +143,7 @@ function AnalysisLayout() {
       setFileName(name)
       setGame(parsed)
       setGameKey(id)
-      setPly(parsed.moves.length)
+      setPly(0)
       setLastOpenedId(id)
 
       const meta: GameMeta = {
@@ -230,7 +247,7 @@ function AnalysisLayout() {
       setFileName(meta.fileName)
       setGame(parsed)
       setGameKey(meta.id)
-      setPly(parsed.moves.length)
+      setPly(0)
     })()
     return () => {
       cancelled = true
@@ -286,7 +303,7 @@ function AnalysisLayout() {
 
   const corridor = useMemo(() => (decisions ? computeCorridor(decisions) : null), [decisions])
 
-  const position = game?.positions[ply]
+  const position = previewFen ?? game?.positions[ply]
 
   // Structure is recomputed per viewed position rather than for the whole game:
   // it is cheap for one position and quadratic-ish in pieces, and only the
@@ -373,7 +390,28 @@ function AnalysisLayout() {
 
   const goTo = (target: number) => {
     if (!game) return
-    setPly(Math.max(0, Math.min(game.moves.length, target)))
+    const next = Math.max(0, Math.min(game.moves.length, target))
+    setPly(next)
+    setDecisionIndex(Math.min(next, Math.max(0, game.moves.length - 1)))
+    updateBoardPhase(next === game.moves.length ? 'after' : 'before')
+    setPreviewFen(null)
+    setFocusSquare(null)
+  }
+
+  const setBoardPhase = (phase: 'before' | 'after') => {
+    updateBoardPhase(phase)
+    setPly(Math.min(game?.moves.length ?? 0, decisionIndex + (phase === 'after' ? 1 : 0)))
+    setPreviewFen(null)
+    setFocusSquare(null)
+  }
+
+  const studyDecision = (index: number) => {
+    goTo(index)
+    setActiveTab('move')
+    requestAnimationFrame(() => {
+      document.querySelector('.dashboard-tabs__content')?.scrollTo(0, 0)
+      if (window.innerWidth <= 860) document.querySelector('.analysis-split')?.scrollIntoView()
+    })
   }
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
@@ -431,8 +469,7 @@ function AnalysisLayout() {
 
           <h1 className="dropzone__title">Postmortem</h1>
           <p className="dropzone__subtitle">
-            Drop a PGN anywhere on this page. What comes back is the stretch where the position stopped offering
-            choices, and the thing that closed them.
+            Review your chess game.
           </p>
 
           <div className="dropzone__actions">
@@ -503,6 +540,15 @@ function AnalysisLayout() {
     fileName,
     gameKey,
     ply,
+    decisionIndex,
+    boardPhase,
+    setBoardPhase,
+    boardFen: position ?? game.positions[0],
+    previewFen,
+    setPreviewFen,
+    focusSquare,
+    setFocusSquare,
+    studyDecision,
     goTo,
     orientation,
     setOrientation,
@@ -623,16 +669,17 @@ function AnalysisLayout() {
       </header>
 
       <AnalysisContext.Provider value={contextValue}>
-        <div className="analysis-split">
-          <div className="analysis-split__board">
+        <div className={`analysis-split${activeTab === 'library' || activeTab === 'explore' ? ' analysis-split--library' : ''}`}>
+          {activeTab !== 'library' && activeTab !== 'explore' && <div className="analysis-split__board">
             <BoardPane />
-          </div>
+          </div>}
 
           <div className="analysis-split__dashboard">
             <div className="dashboard-tabs__content">
               {activeTab === 'report' && <ReportTab />}
               {activeTab === 'moments' && <MomentsTab />}
               {activeTab === 'move' && <MoveTab />}
+              {activeTab === 'explore' && <ExploreTab />}
               {activeTab === 'library' && <LibraryTab />}
             </div>
           </div>

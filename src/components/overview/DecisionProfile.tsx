@@ -28,7 +28,6 @@ export type ProfileScale = {
 const RING_RADIUS = 26
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 /** Beyond this many only-move tests the pips stop being countable at a glance. */
-const MAX_PIPS = 10
 
 function HoldRing({ rate, side }: { rate: number | null; side: Side }) {
   const filled = rate === null ? 0 : rate
@@ -103,8 +102,6 @@ function DecisionProfile({ side, decisions, chain, scale }: DecisionProfileProps
   const worst = chain && chain.ranked.length ? chain.ranked[0] : null
   const leveragePct = worst ? Math.min(1, worst.leverage / scale.leverage) * 100 : 0
 
-  const pips = Math.min(summary.cutsFaced, MAX_PIPS)
-  const survivedPips = Math.min(summary.cutsSurvived, pips)
 
   return (
     <div className="decision-profile">
@@ -126,7 +123,7 @@ function DecisionProfile({ side, decisions, chain, scale }: DecisionProfileProps
 
       <div className="decision-profile__foot">
         <div className="decision-profile__cuts">
-          <span className="decision-profile__title">Only-move tests</span>
+          <span className="decision-profile__title">Narrow decisions held</span>
           {summary.cutsFaced === 0 ? (
             <span className="decision-profile__none">none faced</span>
           ) : (
@@ -135,15 +132,7 @@ function DecisionProfile({ side, decisions, chain, scale }: DecisionProfileProps
               role="img"
               aria-label={`${summary.cutsSurvived} of ${summary.cutsFaced} only-move tests found`}
             >
-              {Array.from({ length: pips }, (_, i) => (
-                <span
-                  key={i}
-                  className={`decision-profile__pip${i < survivedPips ? ' is-found' : ' is-missed'}`}
-                />
-              ))}
-              {summary.cutsFaced > MAX_PIPS && (
-                <span className="decision-profile__figure">×{summary.cutsFaced}</span>
-              )}
+              <span className="decision-profile__figure">{summary.cutsSurvived} of {summary.cutsFaced}</span>
             </div>
           )}
         </div>

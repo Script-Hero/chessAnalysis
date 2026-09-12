@@ -24,10 +24,7 @@ type GraphShapeProps = {
  * node's share of root-to-terminal paths rounds to 1 for every position before
  * the first stored branch, so it reported the sampling policy — candidate lines
  * are only followed a few plies — as if it were a property of the game.
- * Dominance has an exact definition that sparse sampling cannot distort: a node
- * is forced when every path from the root to the exit runs through it, and the
- * size of its dominator subtree is how much of the analysed future that one
- * decision exclusively governs.
+ * Dominance is exact for this sampled graph, not for all legal chess play.
  */
 function GraphShape({ positions, lines, currentPly, onSelectPly }: GraphShapeProps) {
   const dag = useMemo(() => buildPositionDag(positions, lines, 4), [positions, lines])
@@ -68,10 +65,11 @@ function GraphShape({ positions, lines, currentPly, onSelectPly }: GraphShapePro
           <dd>{dag.transpositions.length}</dd>
         </div>
         <div>
-          <dt>Forced junctures</dt>
+          <dt>Sample bottlenecks</dt>
           <dd>{dominance.forced.length}</dd>
         </div>
       </dl>
+      <p className="graph-shape__note">Played positions and up to four plies of stored engine lines. Missing alternatives can change the bottlenecks; these are not forced moves in chess.</p>
 
       <div className="graph-shape__current">
         <h5>This position</h5>
@@ -85,13 +83,12 @@ function GraphShape({ positions, lines, currentPly, onSelectPly }: GraphShapePro
             </li>
             <li>
               {forced.has(currentKey)
-                ? 'Every analysed continuation runs through here — this position dominates the exit.'
-                : `Not forced: some analysed line reaches the end without passing through here.`}
+                ? 'Every root-to-exit path in this sample passes through this position.'
+                : 'Some root-to-exit paths in this sample bypass this position.'}
             </li>
             <li>
-              Exclusively governs {scope} position{scope === 1 ? '' : 's'} of the analysed graph
-              {dag.nodes.size > 0 && ` (${Math.round((scope / dag.nodes.size) * 100)}%)`} — the size of its dominator
-              subtree, and the scope of the decision made here.
+              Dominator subtree: {scope} sampled position{scope === 1 ? '' : 's'}
+              {dag.nodes.size > 0 && ` (${Math.round((scope / dag.nodes.size) * 100)}%)`}. This measures sampled reachability, not move quality.
             </li>
           </ul>
         )}
@@ -104,7 +101,7 @@ function GraphShape({ positions, lines, currentPly, onSelectPly }: GraphShapePro
             {mainlineTranspositions.map(({ node, ply }) => (
               <li key={node.key}>
                 <button type="button" onClick={() => onSelectPly(ply)}>
-                  ply {ply} — reachable {node.inDegree} ways
+                  After ply {ply}: {node.inDegree} incoming moves
                 </button>
               </li>
             ))}

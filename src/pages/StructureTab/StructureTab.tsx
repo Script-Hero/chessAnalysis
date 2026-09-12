@@ -35,7 +35,7 @@ function moveNumber(ply: number): string {
  * each against a null model, because they are evidence rather than conclusions.
  */
 function StructureTab() {
-  const { game, ply, goTo, structure, robustness, temporal, orientation, setStructureOpen } = useAnalysis()
+  const { game, ply, goTo, structure, robustness, temporal, orientation, setStructureOpen, focusSquare, setFocusSquare } = useAnalysis()
 
   // Mounting is the signal that the removal curves are wanted: this panel is
   // rendered only while step three's structural reading is the open sub-tab.
@@ -77,13 +77,13 @@ function StructureTab() {
 
         <div className="structure__flow">
           <p className="structure__flow-head">
-            Defence flow: <strong>{flow.supply}</strong> of <strong>{flow.demand}</strong> units met
+            Defence model: <strong>{flow.supply}</strong> of <strong>{flow.demand}</strong> units met
             {flow.deficit > 0 && <span className="structure__deficit"> — {flow.deficit} short</span>}
           </p>
           {flow.demand === 0 ? (
-            <p className="structure__none">Nothing attacked.</p>
+            <p className="structure__none">No targets included in the defence model.</p>
           ) : flow.deficit === 0 ? (
-            <p className="structure__none">Every attacked piece can be covered at once.</p>
+            <p className="structure__none">All modeled demands have an assignment.</p>
           ) : (
             <ul className="structure__list">
               {flow.targets
@@ -91,7 +91,7 @@ function StructureTab() {
                 .map((t) => (
                   <li key={t.square}>
                     <span className="structure__square">{t.square}</span>
-                    {PIECE_WORD[t.type] ?? t.type} can't be held · {t.attackers.length}a/{t.defenders.length}d
+                    {PIECE_WORD[t.type] ?? t.type} · model shortfall · {t.attackers.length}a/{t.defenders.length}d
                     {t.materialAtRisk > 0.01 && <em> · {t.materialAtRisk.toFixed(1)} pawns</em>}
                   </li>
                 ))}
@@ -168,9 +168,17 @@ function StructureTab() {
 
   return (
     <div className="structure">
+      <section className="structure-evidence"><h2>Piece responsibilities</h2>
+        <div className="evidence-list">{(['white', 'black'] as const).map(side => <div key={side}><h3>{nameOf(side)}</h3>{structure.incidence[side].pieces.filter(p => p.loadBearing > 0).slice(0, 4).map(piece => {
+          const duties = structure.flow[side].deflections.find(d => d.square === piece.square)
+          return <button key={piece.square} aria-pressed={focusSquare === piece.square} onClick={() => { setFocusSquare(piece.square); if (innerWidth <= 860) document.querySelector('.analysis-split__board')?.scrollIntoView({behavior:'smooth'}) }}><strong>{PIECE_WORD[piece.type]} {piece.square}</strong><span>{piece.unique.length} squares controlled by no teammate{duties ? ` · defends ${duties.serves.join(', ')}` : ''}</span></button>
+        })}</div>)}</div>
+        {focusSquare && <p>Selected {focusSquare}: unique coverage is teal; defensive targets are orange.</p>}
+      </section>
+      <details className="method-details"><summary>Network and structural diagnostics</summary>
       {structure.loose.length > 0 && (
         <section className="structure__section">
-          <h3 className="structure__heading">Material winnable right now</h3>
+          <h3 className="structure__heading">Potential exchange losses</h3>
           <ul className="structure__list">
             {structure.loose.map((piece) => (
               <li key={piece.square}>
@@ -201,11 +209,10 @@ function StructureTab() {
 
       <section className="structure__section">
         <h3 className="structure__heading">
-          How fast control collapses
+          Hypothetical piece removal
           <InfoNote label="the removal curves">
-            Pieces are removed one at a time, worst-first against random. The gap between the two curves is the part
-            that is about structure rather than material — how much an opponent gains by choosing what to take rather
-            than taking whatever is available.
+            Hypothetical removals, ordered by initial single-piece impact, compared with random removal.
+            These experiments do not establish a legal capture sequence.
           </InfoNote>
         </h3>
         {!robustness ? (
@@ -270,6 +277,7 @@ function StructureTab() {
           )}
         </section>
       )}
+      </details>
     </div>
   )
 }

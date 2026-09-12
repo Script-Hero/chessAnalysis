@@ -162,7 +162,7 @@ export function explainEpisodes(
           kind: 'coordination',
           ply: last.index,
           strength: coordinationDrop * 6,
-          text: `the pieces stopped defending one another — connectivity fell ${(coordinationDrop * 100).toFixed(0)}% over the span`,
+          text: `defence connectivity decreased by ${coordinationDrop.toFixed(2)} over the span`,
         })
       }
 
@@ -204,7 +204,7 @@ export function explainEpisodes(
     const lead = `Options narrowed ${scale} over ${span}`
     const summary =
       findings.length === 0
-        ? `${lead}. No single structural event accounts for it — the narrowing was gradual.`
+        ? `${lead}. No structural event met the detection thresholds.`
         : `${lead}: ${findings
             .slice(0, 2)
             .map((f) => f.text)
