@@ -25,3 +25,6 @@ dist-ssr
 
 .superpowers/
 .claude/worktrees/
+
+# UI audit screenshots written by scripts/
+artifacts/
