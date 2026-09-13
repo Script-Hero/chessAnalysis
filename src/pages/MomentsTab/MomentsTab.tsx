@@ -1,42 +1,116 @@
-import { useState } from 'react'
-import StretchExplorer from '../../components/corridor/StretchExplorer'
+import { useMemo, useState } from 'react'
 import type { NarrowingEpisode } from '../../lib/corridor'
 import { useAnalysis } from '../../context/AnalysisContext'
-import CorridorChart from '../../components/corridor/CorridorChart'
 import ReviewMoments from '../../components/corridor/ReviewMoments'
-import DecisionMatrix from '../../components/corridor/DecisionMatrix'
-import CutMoments from '../../components/corridor/CutMoments'
-import LeverageList from '../../components/corridor/LeverageList'
-import { findCutMoments } from '../../lib/corridor'
+import GameTimeline, { type Span } from '../../components/moments/GameTimeline'
+import SelectedMovePanel from '../../components/moments/SelectedMovePanel'
+import ThinkTimeScatter from '../../components/moments/ThinkTimeScatter'
+import { useReviewed } from '../../components/moments/useReviewed'
+import { hasClockData } from '../../lib/analysis'
+import { computeCompensation } from '../../lib/compensation'
+import { findMoments, findSqueezes } from '../../lib/moments'
+import { trackPieces } from '../../lib/pieceLanes'
 import '../shared/Dashboard.css'
+import '../../components/moments/moments.css'
 
-const stretchKey = (episode: NarrowingEpisode) => `${episode.mover}-${episode.startPly}`
-
+/**
+ * Step two: which moves to open.
+ *
+ * Worth reviewing tells the story; everything under it exists to find the moves
+ * that story didn't mention. The lanes share one move axis and the whole page
+ * shares one selected move, so a pin, a bar, a compensation spike and a scatter
+ * dot are all ways of pointing at the same thing.
+ */
 export default function MomentsTab() {
-  const { game, decisions, corridor, evals, explanations, chains, moveFilter, decisionIndex, studyDecision, goTo } = useAnalysis()
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
-  const [nearOne, setNearOne] = useState(false)
+  const { game, gameKey, decisions, corridor, evals, judgments, lines, survey, explanations, moveFilter, decisionIndex, studyDecision, goTo } = useAnalysis()
+  const [hover, setHover] = useState<number | null>(null)
+  const [highlight, setHighlight] = useState<Span | null>(null)
+  const [brushed, setBrushed] = useState<Set<number>>(new Set())
+  const [episodeKey, setEpisodeKey] = useState<string | null>(null)
+  const { reviewed, markReviewed } = useReviewed(gameKey)
+
+  const moments = useMemo(
+    () => (evals && judgments && lines ? findMoments({ game, evals, judgments, lines, decisions, explanations }, moveFilter) : null),
+    [game, evals, judgments, lines, decisions, explanations, moveFilter],
+  )
+  const squeezes = useMemo(() => (evals && decisions ? [...findSqueezes(evals, decisions).values()] : []), [evals, decisions])
+  const compensation = useMemo(() => (evals ? computeCompensation(evals, game.positions) : null), [evals, game.positions])
+  const pieces = useMemo(() => trackPieces(game), [game])
+
   if (!decisions || !corridor) return <p>Analyzing decisions...</p>
-  const own = decisions.filter(d => moveFilter === 'both' || d.mover === moveFilter)
-  const points = corridor.filter(d => moveFilter === 'both' || d.mover === moveFilter)
-  const episodes = (explanations ?? []).filter(e => (moveFilter === 'both' || e.episode.mover === moveFilter) && (!nearOne || e.episode.endWidth <= 2))
-  const selected = episodes.find(e => stretchKey(e.episode) === selectedKey)?.episode ?? null
-  const selectStretch = (episode: NarrowingEpisode, reveal = false) => {
-    setSelectedKey(stretchKey(episode))
-    goTo(episode.startPly - 1)
-    if (reveal) requestAnimationFrame(() => document.getElementById(`stretch-${stretchKey(episode)}`)?.scrollIntoView({ block: 'nearest' }))
-  }
-  const selectDecision = (index: number) => {
-    const episode = episodes.find(e => e.episode.mover === corridor.find(p => p.index === index)?.mover && index >= e.episode.startPly - 1 && index < e.episode.endPly)?.episode
-    setSelectedKey(episode ? stretchKey(episode) : null)
+
+  const shows = (side: 'white' | 'black') => moveFilter === 'both' || side === moveFilter
+  const sides = (['white', 'black'] as const).filter(shows)
+  const own = decisions.filter((d) => shows(d.mover))
+  const points = corridor.filter((p) => shows(p.mover))
+  const episodes = (explanations ?? []).map((e) => e.episode).filter((e) => shows(e.mover))
+  const selectedEpisode = episodes.find((e) => `${e.mover}-${e.startPly}` === episodeKey) ?? null
+
+  const select = (index: number) => {
+    setEpisodeKey(null)
     goTo(index)
   }
-  const peak = Math.max(1, ...Object.values(chains ?? {}).flatMap(c => c.ranked.map(p => p.leverage)))
-  return <div className="overview moments-overview">
-    <ReviewMoments />
-    <section><h2>Choices across the game</h2><CorridorChart points={points} decisions={own} episodes={episodes.map(e => e.episode)} evals={evals} currentPly={decisionIndex} onSelect={selectDecision} selectedEpisode={selected} onSelectEpisode={episode => selectStretch(episode, true)} /></section>
-    <details className="method-details"><summary>Decision breakdown</summary><DecisionMatrix decisions={own} currentPly={decisionIndex} onSelect={studyDecision} /></details>
-    <details className="method-details"><summary>Effectively one-choice decisions</summary><CutMoments moments={findCutMoments(own)} currentPly={decisionIndex} onSelect={studyDecision} whiteLabel={game.headers.White ?? 'White'} blackLabel={game.headers.Black ?? 'Black'} /></details>
-    {chains && <details className="method-details"><summary>Model-based impact ranking</summary><p>Expected-value changes under a fixed softmax policy, in percentage points. This baseline is not fitted to either player. Each side uses its own outcome perspective.</p><div className="overview__leverage">{(['white','black'] as const).filter(side => moveFilter === 'both' || side === moveFilter).map(side => <section key={side}><h3>{side === 'white' ? game.headers.White : game.headers.Black}</h3><LeverageList chain={chains[side]} label={side} currentPly={decisionIndex} onSelect={studyDecision} scale={peak} /></section>)}</div></details>}
-  </div>
+  const selectEpisode = (episode: NarrowingEpisode) => {
+    setEpisodeKey(`${episode.mover}-${episode.startPly}`)
+    goTo(episode.startPly - 1)
+  }
+  const open = (index: number) => {
+    markReviewed(index)
+    studyDecision(index)
+  }
+  const span = highlight ?? (selectedEpisode ? { from: selectedEpisode.startPly - 1, to: selectedEpisode.endPly } : null)
+
+  return (
+    <div className="overview moments-overview">
+      <ReviewMoments moments={moments} onHover={setHighlight} reviewed={reviewed} onOpen={open} />
+
+      <section>
+        <h2>Game timeline</h2>
+        <GameTimeline
+          game={game}
+          sides={sides}
+          points={points}
+          decisions={decisions}
+          episodes={episodes}
+          moments={moments ?? []}
+          squeezes={squeezes}
+          compensation={compensation}
+          pieces={pieces.filter((l) => shows(l.side))}
+          selected={decisionIndex}
+          hover={hover}
+          onHover={setHover}
+          onSelect={select}
+          highlight={span}
+          brushed={brushed}
+          reviewed={reviewed}
+          selectedEpisode={selectedEpisode}
+          onSelectEpisode={selectEpisode}
+        />
+        <SelectedMovePanel
+          game={game}
+          index={decisionIndex}
+          decision={decisions[decisionIndex] ?? null}
+          survey={survey?.[decisionIndex] ?? null}
+          squeeze={squeezes.find((s) => s.target === decisionIndex) ?? null}
+          reviewed={reviewed.has(decisionIndex)}
+          onSelect={select}
+          onOpen={open}
+        />
+      </section>
+
+      {hasClockData(game.moves) && (
+        <ThinkTimeScatter
+          game={game}
+          decisions={own}
+          selected={decisionIndex}
+          hover={hover}
+          onHover={setHover}
+          onSelect={select}
+          brushed={brushed}
+          onBrush={setBrushed}
+          reviewed={reviewed}
+        />
+      )}
+    </div>
+  )
 }

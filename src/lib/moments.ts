@@ -119,6 +119,45 @@ export function describeMove(move: Move): string {
   return text
 }
 
+/** An accurate move that cut the opponent's next decision to a fraction of its usual room. */
+export type Squeeze = {
+  /** The move that set the problem. */
+  setter: number
+  /** The opponent's decision that was squeezed: always `setter + 1`. */
+  target: number
+  /** The squeezed side's typical effective choices over its recent decisions. */
+  from: number
+  /** Effective choices at the squeezed decision. */
+  to: number
+}
+
+/** Squeezes keyed by the setter's move index. */
+export function findSqueezes(evals: PositionEval[], decisions: DecisionNode[]): Map<number, Squeeze> {
+  const result = new Map<number, Squeeze>()
+  const n = decisions.length
+  if (evals.length < n + 1) return result
+  const whiteWin = evals.map((e) => scoreWinProb(e.score, e.mateIn))
+  const win = (side: Side, p: number) => (side === 'white' ? whiteWin[p] : 100 - whiteWin[p])
+  const loss = (i: number) => Math.max(0, win(moverOf(i), i) - win(moverOf(i), i + 1))
+  const median = (xs: number[]) => {
+    const s = [...xs].sort((a, b) => a - b)
+    return s.length ? s[Math.floor(s.length / 2)] : 0
+  }
+  for (let i = 0; i + 1 < n; i++) {
+    const next = decisions[i + 1]
+    if (loss(i) > ACCURATE_PCT || next?.softWidth == null) continue
+    const recent = decisions
+      .filter((d) => d.mover === next.mover && d.index < i + 1 && d.softWidth != null)
+      .slice(-6)
+      .map((d) => d.softWidth!)
+    const typical = median(recent)
+    if (next.softWidth <= 2.5 && typical >= 4 && typical >= next.softWidth * 2) {
+      result.set(i, { setter: i, target: i + 1, from: typical, to: next.softWidth })
+    }
+  }
+  return result
+}
+
 export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'): Moment[] {
   const { game, evals, judgments, lines, decisions, explanations } = input
   const n = game.moves.length
@@ -247,23 +286,8 @@ export function findMoments(input: MomentInput, filter: Side | 'both' = 'both'):
 
   // --- Single errors ------------------------------------------------------------
 
-  const widths = (side: Side, before: number) =>
-    (decisions ?? []).filter((d) => d.mover === side && d.index < before && d.softWidth != null).slice(-6).map((d) => d.softWidth!)
-  const median = (xs: number[]) => {
-    const s = [...xs].sort((a, b) => a - b)
-    return s.length ? s[Math.floor(s.length / 2)] : 0
-  }
-
   /** Moves after which the opponent's real options collapsed. */
-  const problemSetBy = new Map<number, { from: number; to: number }>()
-  for (let i = 0; i + 1 < n && decisions; i++) {
-    const next = decisions[i + 1]
-    if (loss(i) > ACCURATE_PCT || next?.softWidth == null) continue
-    const typical = median(widths(next.mover, i + 1))
-    if (next.softWidth <= 2.5 && typical >= 4 && typical >= next.softWidth * 2) {
-      problemSetBy.set(i, { from: typical, to: next.softWidth })
-    }
-  }
+  const problemSetBy = decisions ? findSqueezes(evals, decisions) : new Map<number, Squeeze>()
 
   const clocks = hasClockData(game.moves) ? game.moves.map((m) => m.clockSeconds ?? 0) : null
   const increment = Number(game.headers.TimeControl?.split('+')[1] ?? 0) || 0

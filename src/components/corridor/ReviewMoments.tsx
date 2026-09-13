@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import { useAnalysis } from '../../context/AnalysisContext'
-import { findMoments, moveLabel, type Swing } from '../../lib/moments'
+import { findMoments, moveLabel, type Moment, type Swing } from '../../lib/moments'
 import type { Side } from '../../lib/analysis'
 
 /** The headline side's win% around the moment, with the described change drawn heavier. */
@@ -30,9 +30,25 @@ function SwingChart({ swing, side }: { swing: Swing; side: Side }) {
   )
 }
 
-export default function ReviewMoments() {
+type Props = {
+  /** Precomputed moments, so a page can pin the same list elsewhere. Computed here when omitted. */
+  moments?: Moment[] | null
+  /** Reports the hovered row's swing span, or null when the pointer leaves. */
+  onHover?: (span: { from: number; to: number } | null) => void
+  reviewed?: Set<number>
+  /** Called instead of `studyDecision` when given, so the caller can record the visit. */
+  onOpen?: (index: number) => void
+}
+
+export default function ReviewMoments({ moments: given, onHover, reviewed, onOpen }: Props = {}) {
   const { game, evals, judgments, lines, decisions, explanations, moveFilter, studyDecision } = useAnalysis()
-  const moments = evals && judgments && lines ? findMoments({ game, evals, judgments, lines, decisions, explanations }, moveFilter) : null
+  const moments =
+    given !== undefined
+      ? given
+      : evals && judgments && lines
+        ? findMoments({ game, evals, judgments, lines, decisions, explanations }, moveFilter)
+        : null
+  const open = onOpen ?? studyDecision
 
   return (
     <section className="review-moments">
@@ -42,7 +58,15 @@ export default function ReviewMoments() {
           {moments.map((m) => (
             // The whole row opens the move; the headline button is its keyboard target, and
             // its click bubbles here like any other click in the row.
-            <li key={`${m.kind}-${m.index}`} className="review-moment" onClick={() => studyDecision(m.index)}>
+            <li
+              key={`${m.kind}-${m.index}`}
+              className={`review-moment${reviewed?.has(m.index) ? ' is-reviewed' : ''}`}
+              onClick={() => open(m.index)}
+              onMouseEnter={() => onHover?.({ from: m.swing.from, to: m.swing.to })}
+              onMouseLeave={() => onHover?.(null)}
+              onFocus={() => onHover?.({ from: m.swing.from, to: m.swing.to })}
+              onBlur={() => onHover?.(null)}
+            >
               <button className="review-moment__main">
                 <strong>
                   <span className={`review-moment__side is-${m.side}`}><span aria-hidden="true">●</span> {m.side === 'white' ? 'White' : 'Black'}</span> {m.headline}
@@ -50,6 +74,7 @@ export default function ReviewMoments() {
               </button>
               <SwingChart swing={m.swing} side={m.side} />
               <span className="review-moment__move">
+                {reviewed?.has(m.index) && <span className="review-moment__reviewed">Reviewed</span>}
                 {moveLabel(m.index, game.moves[m.index].san)}
                 <ArrowRight size={18} />
               </span>
@@ -63,7 +88,7 @@ export default function ReviewMoments() {
                       className="review-moment__ref"
                       onClick={(e) => {
                         e.stopPropagation()
-                        studyDecision(part.index)
+                        open(part.index)
                       }}
                     >
                       {part.label}

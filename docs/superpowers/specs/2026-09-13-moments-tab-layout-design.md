@@ -86,10 +86,12 @@ A new `GameTimeline` component owns the horizontal scale and the single scroll
 container. All lanes render inside that container at the same width, so they
 scroll together and a move sits at the same x in every lane.
 
-**Scale.** Same as today's `CorridorChart`: one column per full move,
-`width = max(available, 640, fullMoves × 14)`, a 48px left gutter for labels.
-A move with index `i` is centred at `x(i + 1)`; a position `p` sits at the
-column boundary `48 + (p / 2) / fullMoves × (width − 64)`.
+**Scale.** As in the old `CorridorChart`: one column per full move, White and
+Black sharing it in separate lanes, `width = max(available, 640, 108 +
+fullMoves × 14)`, with a 92px left gutter wide enough for piece names. With
+`plot = width − 108`, move `i` is centred at `92 + (⌊i / 2⌋ + 0.5) / fullMoves ×
+plot` and position `p` sits on the column boundary `92 + (p / 2) / fullMoves ×
+plot`.
 
 **Readout** (above the lanes, not scrolled): for the hovered move, else the
 selected move — move label, effective choices, the played move's result
@@ -100,13 +102,16 @@ selected move — move label, effective choices, the played move's result
 intervals, moved into the shared scale. New:
 
 - **Pins.** Each Worth reviewing moment draws a small marker above its move in
-  the mover's lane, and a faint band over its swing span across all lanes. Pins
+  the mover's lane; its swing span is shaded across all lanes only while its
+  row is hovered, so several moments don't stack bands over the chart. Pins
   are how the timeline avoids repeating the list: a striking bar with no pin is
   the thing the list didn't mention.
 - **Cause links.** Where an accurate move by one side cut the other side's next
   decision to ≤ 2.5 effective choices from a recent typical ≥ 4 (the detector
   `findMoments` already uses for "set a problem"), draw a thin curved connector
-  from the setter's bar to the squeezed bar. The detector is extracted from
+  from the setter's bar to the squeezed bar, leaving and entering each lane on
+  the side facing the other. Links are drawn only when both lanes are shown and
+  never capture the pointer. The detector is extracted from
   `findMoments` into an exported `findSqueezes(...)` in `lib/moments.ts` and
   `findMoments` calls it, so the two can't disagree.
 
@@ -120,8 +125,8 @@ perspective, per position.
   are shaded in the favoured side's accent colour. These are where the position
   was worth more or less than the material count — sacrifices, material that
   couldn't be used, attacks.
-- Readout text: "White down 3 in material, evaluation −0.4: worth +2.6 beyond
-  material".
+- Readout text: "Black up 3 in material, evaluation −0.4: White worth 2.6
+  beyond material"; under 2 pawns it reads "in line with material".
 - Derived in a new pure module `lib/compensation.ts`:
   `computeCompensation(evals, positions)` → per-position values and regions.
 
@@ -137,13 +142,15 @@ neutral when unknown). Castling puts a dot on both king and rook lanes.
   followed square to square through each move; captured pieces stop; en passant
   and promotion handled.
 
-**Selected-move panel** (below the timeline, not scrolled). For
-`decisionIndex`, filter permitting:
+**Selected-move panel** (below the timeline, not scrolled), for
+`decisionIndex`:
 
 - **Candidate spread:** every legal move from `survey[index].moves` as a dot on a
-  horizontal 0–100 win% axis for the mover. Dots that would overlap stack
+  horizontal win% axis for the mover, zoomed to the moves' range (at least 20
+  points wide) so a lost or won position isn't crushed into one column. Dots that would overlap stack
   vertically. The safe band (within `CORRIDOR_TOLERANCE_PCT` of best) is shaded.
-  The played move is ringed and labelled; the best move is labelled. Hovering a
+  The played move is placed first so its ring sits on the baseline; the best
+  and played moves are labelled above the dots. Hovering a
   dot shows its SAN and win%.
 - **Summary line:** "12 of 31 moves kept the position · played Nf5, 6th best,
   −11%". Uses `corridorWidth`, `legalCount`, `playedRank`, `playedLossPct`.
